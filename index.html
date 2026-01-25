@@ -1,1 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pro Football 26 | Soccer Hero Edition</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js"></script>
+    <style>
+        :root { --accent: #ff4d4d; --glass: rgba(255, 255, 255, 0.1); }
+        body { margin: 0; overflow: hidden; background: #000; font-family: 'Inter', sans-serif; color: white; }
+        canvas { width: 100vw; height: 100vh; display: block; position: fixed; top: 0; left: 0; }
 
+        /* Loading Screen */
+        #loading-screen {
+            position: fixed; inset: 0; background: black; z-index: 1000;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+        }
+        .spinner { width: 50px; height: 50px; border: 3px solid var(--accent); border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Customizer Sidebar (FIFA 26 Style) */
+        #ui-layer { display: none; }
+        .sidebar {
+            position: fixed; right: 20px; top: 20px; bottom: 20px; width: 300px;
+            background: var(--glass); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 24px; padding: 24px; overflow-y: auto; z-index: 100;
+        }
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
+
+        .section-title { font-size: 14px; text-transform: uppercase; letter-spacing: 2px; color: #aaa; margin: 20px 0 10px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .btn { 
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white;
+            padding: 12px; border-radius: 12px; cursor: pointer; transition: 0.2s; font-size: 12px;
+        }
+        .btn:active { background: var(--accent); transform: scale(0.95); }
+        .finish-btn { background: var(--accent); width: 100%; margin-top: 30px; font-weight: bold; font-size: 16px; padding: 15px; }
+
+        /* Orientation Notice */
+        #orientation-notice {
+            display: none; position: fixed; inset: 0; background: #000; z-index: 2000;
+            flex-direction: column; justify-content: center; align-items: center; text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<div id="loading-screen">
+    <div id="loading-ball"></div>
+    <div class="spinner"></div>
+    <p style="letter-spacing: 4px; margin-top: 20px;">PRO FOOTBALL 26</p>
+</div>
+
+<div id="orientation-notice">
+    <h2>PLEASE ROTATE TO LANDSCAPE</h2>
+    <p>Soccer Hero Experience requires wide view</p>
+</div>
+
+<div id="ui-layer">
+    <div class="sidebar">
+        <h1 style="font-size: 20px; margin: 0;">PLAYER CREATOR</h1>
+        
+        <div class="section-title">Hairstyles</div>
+        <div class="grid">
+            <button class="btn" onclick="custom('hair', 'Fade')">Top Fade</button>
+            <button class="btn" onclick="custom('hair', 'Buzz')">Buzz Cut</button>
+            <button class="btn" onclick="custom('hair', 'Mohawk')">Mohawk</button>
+            <button class="btn" onclick="custom('hair', 'Braids')">Braids</button>
+        </div>
+
+        <div class="section-title">Accessories</div>
+        <div class="grid">
+            <button class="btn" onclick="custom('acc', 'Headband')">Headband</button>
+            <button class="btn" onclick="custom('acc', 'WristTape')">Wrist Tape</button>
+            <button class="btn" onclick="custom('acc', 'Gloves')">Gloves</button>
+            <button class="btn" onclick="custom('acc', 'Ankle')">Ankle Tape</button>
+        </div>
+
+        <div class="section-title">Emotes</div>
+        <div class="grid">
+            <button class="btn" onclick="emote('Siu')">SIU</button>
+            <button class="btn" onclick="emote('Griddy')">GRIDDY</button>
+            <button class="btn" onclick="emote('Calm')">CALMA</button>
+            <button class="btn" onclick="emote('Heart')">HEART</button>
+        </div>
+
+        <button class="btn finish-btn" onclick="startCinematic()">FINISH & KICKOFF</button>
+    </div>
+</div>
+
+<script>
+    let scene, camera, renderer, ball, stadium, ronaldo;
+    
+    function init() {
+        scene = new THREE.Scene();
+        camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        document.body.appendChild(renderer.domElement);
+
+        // Lights
+        const sun = new THREE.DirectionalLight(0xffffff, 2);
+        sun.position.set(10, 20, 10);
+        scene.add(sun);
+        scene.add(new THREE.AmbientLight(0x404040, 1.5));
+
+        // Loading GUI Ball
+        const ballGeo = new THREE.SphereGeometry(1, 32, 32);
+        const ballMat = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.5, roughness: 0.2 });
+        ball = new THREE.Mesh(ballGeo, ballMat);
+        scene.add(ball);
+        camera.position.set(0, 0, 5);
+
+        window.addEventListener('resize', onResize);
+        onResize();
+
+        // 3 Second Transition
+        setTimeout(() => {
+            document.getElementById('loading-screen').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('loading-screen').style.display = 'none';
+                setupStadium();
+            }, 500);
+        }, 3000);
+
+        animate();
+    }
+
+    function setupStadium() {
+        scene.remove(ball);
+        // Stadium Floor
+        const grassGeo = new THREE.PlaneGeometry(200, 200);
+        const grassMat = new THREE.MeshStandardMaterial({ color: 0x1a471a });
+        const pitch = new THREE.Mesh(grassGeo, grassMat);
+        pitch.rotation.x = -Math.PI / 2;
+        scene.add(pitch);
+
+        // Simple Ronaldo Placeholder
+        const bodyGeo = new THREE.CapsuleGeometry(0.5, 1, 4, 8);
+        const bodyMat = new THREE.MeshStandardMaterial({ color: 0xff0000 });
+        ronaldo = new THREE.Mesh(bodyGeo, bodyMat);
+        ronaldo.position.y = 1;
+        scene.add(ronaldo);
+
+        camera.position.set(0, 3, 8);
+        camera.lookAt(ronaldo.position);
+        document.getElementById('ui-layer').style.display = 'block';
+    }
+
+    function onResize() {
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        renderer.setSize(w, h);
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+        
+        // Soccer Hero Orientation Logic
+        const notice = document.getElementById('orientation-notice');
+        notice.style.display = (h > w) ? 'flex' : 'none';
+    }
+
+    function custom(type, value) {
+        console.log(`Setting ${type} to ${value}`);
+        // Add visual logic here to change model parts
+    }
+
+    function emote(name) {
+        console.log(`Performing ${name} emote`);
+        // Add animation logic here
+    }
+
+    function startCinematic() {
+        document.getElementById('ui-layer').style.display = 'none';
+        // Skycam knuckball goal logic
+        let frame = 0;
+        const knuckball = () => {
+            frame++;
+            camera.position.z -= 0.1;
+            camera.position.y += 0.01;
+            if(frame < 100) requestAnimationFrame(knuckball);
+            else alert("GOAL! CAREER MODE ACTIVATED.");
+        };
+        knuckball();
+    }
+
+    function animate() {
+        requestAnimationFrame(animate);
+        if(ball) ball.rotation.y += 0.03;
+        renderer.render(scene, camera);
+    }
+
+    init();
+</script>
+</body>
+  </html>
+  
