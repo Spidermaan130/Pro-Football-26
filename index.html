@@ -3,185 +3,152 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pro Football 26 | Ultra Realism</title>
+    <title>Pro Football 26 | Ultra Realistic Customizer</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js"></script>
     <style>
-        :root { --accent: #ff4d4d; --glass: rgba(0, 0, 0, 0.7); }
-        body { margin: 0; overflow: hidden; background: #050505; font-family: 'Inter', sans-serif; color: white; }
-        canvas { width: 100vw; height: 100vh; display: block; position: fixed; top: 0; left: 0; }
-
-        /* Soccer Hero Landscape Lock */
+        :root { --accent: #00ff88; --glass: rgba(0, 0, 0, 0.8); }
+        body { margin: 0; overflow: hidden; background: #050505; font-family: 'Segoe UI', sans-serif; color: white; }
+        
+        /* Landscape Check (Soccer Hero Style) */
         #rotate-notice {
             display: none; position: fixed; inset: 0; background: #000; z-index: 9999;
             flex-direction: column; justify-content: center; align-items: center; text-align: center;
         }
 
-        /* FIFA 26 High-End Sidebar */
-        #ui-layer { display: none; }
-        .sidebar {
-            position: fixed; left: 20px; top: 20px; bottom: 20px; width: 320px;
-            background: var(--glass); backdrop-filter: blur(25px); 
-            border: 1px solid rgba(255,255,255,0.1); border-radius: 30px; 
-            padding: 25px; overflow-y: auto; z-index: 100;
+        /* Music Player (Bottom Left) */
+        #music-player {
+            position: fixed; bottom: 20px; left: 20px; background: var(--glass);
+            padding: 15px; border-radius: 50px; border: 1px solid rgba(255,255,255,0.1);
+            display: flex; align-items: center; gap: 10px; z-index: 100; backdrop-filter: blur(10px);
         }
-        .sidebar::-webkit-scrollbar { width: 4px; }
-        .sidebar::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
 
-        .category { margin-bottom: 25px; }
-        .category-title { font-size: 12px; text-transform: uppercase; color: var(--accent); letter-spacing: 2px; margin-bottom: 15px; font-weight: 800; }
+        /* Customizer Sidebar (Left Side) */
+        .sidebar {
+            position: fixed; left: 20px; top: 20px; bottom: 20px; width: 300px;
+            background: var(--glass); backdrop-filter: blur(20px); 
+            border: 1px solid rgba(255,255,255,0.1); border-radius: 25px; 
+            padding: 20px; overflow-y: auto; z-index: 100;
+        }
+
+        .category-title { font-size: 11px; text-transform: uppercase; color: var(--accent); letter-spacing: 2px; margin: 20px 0 10px; font-weight: bold; }
         
-        .color-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 15px; }
+        /* Interactive Color Palette */
+        .color-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
         .color-btn { width: 100%; aspect-ratio: 1; border-radius: 50%; border: 2px solid transparent; cursor: pointer; transition: 0.3s; }
-        .color-btn.active { border-color: white; transform: scale(1.1); }
+        .color-btn:active { transform: scale(0.8); border-color: white; }
 
-        .item-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .btn { 
             background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white;
-            padding: 15px; border-radius: 15px; cursor: pointer; transition: 0.2s; font-size: 11px; font-weight: 600;
+            padding: 12px; border-radius: 12px; cursor: pointer; font-size: 11px; transition: 0.2s;
         }
-        .btn:active { background: var(--accent); transform: scale(0.95); }
-        .finish-btn { background: var(--accent); width: 100%; margin-top: 20px; font-weight: 900; font-size: 16px; padding: 18px; border-radius: 20px; border: none; color: white; cursor: pointer; }
+        .btn:active { background: var(--accent); color: black; }
+        .finish-btn { background: var(--accent); color: black; width: 100%; margin-top: 20px; font-weight: 800; padding: 15px; border-radius: 15px; border: none; cursor: pointer; }
 
-        /* Loading Animation */
-        #loading-screen {
-            position: fixed; inset: 0; background: black; z-index: 1000;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-        }
+        canvas { width: 100vw; height: 100vh; display: block; position: fixed; top: 0; left: 0; }
     </style>
 </head>
 <body>
 
-<div id="loading-screen">
-    <div id="ball-container"></div>
-    <h1 style="letter-spacing: 8px; font-size: 18px; margin-top: 20px;">PRO FOOTBALL 26</h1>
-    <div style="width: 100px; height: 2px; background: #333; margin-top: 10px;"><div id="progress" style="width: 0%; height: 100%; background: var(--accent); transition: 1s;"></div></div>
+<div id="rotate-notice"><h1>PLEASE ROTATE TO LANDSCAPE</h1><p>Soccer Hero Experience</p></div>
+
+<div id="music-player">
+    <button class="btn" style="border-radius: 50%; width: 40px; height: 40px; padding: 0;" onclick="toggleMusic()">▶</button>
+    <div style="font-size: 10px;">TRACK: PRO FOOTBALL 26 - THEME</div>
 </div>
 
-<div id="rotate-notice"><h1>PLEASE ROTATE DEVICE</h1><p>Landscape Mode Required</p></div>
-
-<div id="ui-layer">
-    <div class="sidebar">
-        <div class="category">
-            <div class="category-title">Kit Customizer</div>
-            <div class="color-grid">
-                <div class="color-btn" style="background: #ff0000;" onclick="changeColor('#ff0000')"></div>
-                <div class="color-btn" style="background: #ffffff;" onclick="changeColor('#ffffff')"></div>
-                <div class="color-btn" style="background: #0000ff;" onclick="changeColor('#0000ff')"></div>
-                <div class="color-btn" style="background: #ffff00;" onclick="changeColor('#ffff00')"></div>
-                <div class="color-btn" style="background: #000000;" onclick="changeColor('#000000')"></div>
-            </div>
-        </div>
-
-        <div class="category">
-            <div class="category-title">Accessories & Gear</div>
-            <div class="item-row">
-                <button class="btn" onclick="toggleAcc('headband')">Headband</button>
-                <button class="btn" onclick="toggleAcc('tape')">Wrist Tape</button>
-                <button class="btn" onclick="toggleAcc('boots')">Elite Boots</button>
-                <button class="btn" onclick="toggleAcc('tattoos')">Tattoos</button>
-            </div>
-        </div>
-
-        <div class="category">
-            <div class="category-title">Signature Emotes</div>
-            <div class="item-row">
-                <button class="btn" onclick="playEmote('Siu')">SIUUU</button>
-                <button class="btn" onclick="playEmote('Griddy')">GRIDDY</button>
-            </div>
-        </div>
-
-        <button class="finish-btn" onclick="startCinematic()">START CAREER</button>
+<div class="sidebar">
+    <h2 style="margin: 0; font-size: 18px;">KIT CUSTOMIZER</h2>
+    
+    <div class="category-title">Dynamic Colors</div>
+    <div class="color-grid">
+        <div class="color-btn" style="background: #ff0000;" onclick="changeKit('#ff0000')"></div>
+        <div class="color-btn" style="background: #ffffff;" onclick="changeKit('#ffffff')"></div>
+        <div class="color-btn" style="background: #00ff88;" onclick="changeKit('#00ff88')"></div>
+        <div class="color-btn" style="background: #0000ff;" onclick="changeKit('#0000ff')"></div>
+        <div class="color-btn" style="background: #ffff00;" onclick="changeKit('#ffff00')"></div>
     </div>
+
+    <div class="category-title">Model Poses & Toggling</div>
+    <div class="btn-row">
+        <button class="btn" onclick="setPose('Dribble')">Dribbling</button>
+        <button class="btn" onclick="setPose('Celebrate')">Siuuu</button>
+    </div>
+
+    <div class="category-title">Accessories</div>
+    <div class="btn-row">
+        <button class="btn" onclick="toggleProp('Headband')">Headband</button>
+        <button class="btn" onclick="toggleProp('WristTape')">Wrist Tape</button>
+    </div>
+
+    <div class="category-title">Emotes</div>
+    <div class="btn-row">
+        <button class="btn" onclick="playEmote('Griddy')">Griddy</button>
+        <button class="btn" onclick="playEmote('Heart')">Heart</button>
+    </div>
+
+    <button class="finish-btn" onclick="startCareer()">START CAREER</button>
 </div>
 
 <script>
-    let scene, camera, renderer, ball, ronaldo;
+    let scene, camera, renderer, ronaldo;
 
     function init() {
         scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x050505);
+
+        // Character on the RIGHT fix [01:48]
         camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-        
-        renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        camera.position.set(-3, 2, 6); 
+        camera.lookAt(1.5, 1, 0); // Looking at the player on the right
+
+        renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.toneMapping = THREE.ACESFilmicToneMapping; // Real-world lighting
-        renderer.outputColorSpace = THREE.SRGBColorSpace;
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
         document.body.appendChild(renderer.domElement);
 
-        // Realistic Studio Lighting
-        const mainLight = new THREE.DirectionalLight(0xffffff, 3);
-        mainLight.position.set(5, 5, 5);
-        scene.add(mainLight);
-        scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+        // High-End Studio Lighting
+        const light = new THREE.DirectionalLight(0xffffff, 3);
+        light.position.set(5, 10, 5);
+        scene.add(light);
+        scene.add(new THREE.AmbientLight(0xffffff, 0.8));
 
-        // Intro Ball
-        const ballGeo = new THREE.SphereGeometry(1, 64, 64);
-        const ballMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.1, metalness: 0.3 });
-        ball = new THREE.Mesh(ballGeo, ballMat);
-        scene.add(ball);
-        camera.position.z = 4;
+        // Ronaldo Placeholder (Right Side)
+        const geo = new THREE.CapsuleGeometry(0.5, 1.2, 8, 16);
+        const mat = new THREE.MeshStandardMaterial({ color: 0xff0000 });
+        ronaldo = new THREE.Mesh(geo, mat);
+        ronaldo.position.set(1.5, 1, 0); // Pushed to the right side
+        scene.add(ronaldo);
+
+        // Ground Reflection
+        const floorGeo = new THREE.PlaneGeometry(100, 100);
+        const floorMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.1 });
+        const floor = new THREE.Mesh(floorGeo, floorMat);
+        floor.rotation.x = -Math.PI / 2;
+        scene.add(floor);
 
         window.addEventListener('resize', onResize);
         onResize();
-
-        // 3 Second Loading sequence
-        document.getElementById('progress').style.width = '100%';
-        setTimeout(() => {
-            document.getElementById('loading-screen').style.display = 'none';
-            setupGame();
-        }, 3000);
-
         animate();
     }
 
-    function setupGame() {
-        scene.remove(ball);
-        scene.background = new THREE.Color(0x0a0a0a);
-        
-        // Realistic Ground Shadow
-        const shadowGeo = new THREE.CircleGeometry(2, 32);
-        const shadowMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.3 });
-        const shadow = new THREE.Mesh(shadowGeo, shadowMat);
-        shadow.rotation.x = -Math.PI/2;
-        scene.add(shadow);
-
-        // Placeholder for High-Detail Ronaldo (Red Kit)
-        const ronGeo = new THREE.CapsuleGeometry(0.5, 1.2, 8, 16);
-        const ronMat = new THREE.MeshStandardMaterial({ color: 0xff0000 });
-        ronaldo = new THREE.Mesh(ronGeo, ronMat);
-        ronaldo.position.y = 1;
-        scene.add(ronaldo);
-
-        camera.position.set(3, 2, 5);
-        camera.lookAt(0, 1, 0);
-        document.getElementById('ui-layer').style.display = 'block';
-    }
-
     function onResize() {
-        renderer.setSize(window.innerWidth, window.innerHeight);
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
-        
-        const isPortrait = window.innerHeight > window.innerWidth;
-        document.getElementById('rotate-notice').style.display = isPortrait ? 'flex' : 'none';
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.getElementById('rotate-notice').style.display = (window.innerHeight > window.innerWidth) ? 'flex' : 'none';
     }
 
-    function changeColor(hex) {
-        if(ronaldo) ronaldo.material.color.set(hex);
+    function changeKit(color) {
+        if(ronaldo) ronaldo.material.color.set(color);
     }
 
-    function playEmote(type) {
-        console.log("Playing Signature: " + type);
-        // Emote Animation Logic
-    }
-
-    function startCinematic() {
-        document.getElementById('ui-layer').style.display = 'none';
-        alert("GOAL! Cinematic Kickoff Starting...");
+    function startCareer() {
+        alert("GOAL! Starting Knuckleball Cinematic...");
     }
 
     function animate() {
         requestAnimationFrame(animate);
-        if(ball) ball.rotation.y += 0.02;
         renderer.render(scene, camera);
     }
 
