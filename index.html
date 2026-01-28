@@ -5,119 +5,40 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PRO FOOTBALL 26</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Arial Black', Arial, sans-serif;
-            overflow: hidden;
-            background: #000;
-        }
-
-        #gameContainer {
-            width: 100vw;
-            height: 100vh;
-            position: relative;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Arial Black', sans-serif; overflow: hidden; background: #000; }
+        #gameContainer { width: 100vw; height: 100vh; position: relative; }
         #titleScreen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #000;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 10;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 10;
         }
-
         #titleText {
-            font-size: 4rem;
-            color: #0f0;
-            text-shadow: 0 0 20px #0f0, 0 0 40px #0f0;
-            letter-spacing: 8px;
-            opacity: 0;
+            font-size: 3rem; color: #0f0; text-shadow: 0 0 20px #0f0;
+            letter-spacing: 4px; text-align: center; padding: 20px;
         }
-
         @keyframes fadeInOut {
-            0% { opacity: 0; }
-            20% { opacity: 1; }
-            80% { opacity: 1; }
-            100% { opacity: 0; }
+            0% { opacity: 0; } 20% { opacity: 1; } 80% { opacity: 1; } 100% { opacity: 0; }
         }
-
-        .fade-animation {
-            animation: fadeInOut 3s ease-in-out;
-        }
-
-        #renderCanvas {
-            width: 100%;
-            height: 100%;
-            display: block;
-        }
-
-        #controls {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            color: #fff;
-            font-size: 14px;
-            text-align: center;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 10px 20px;
-            border-radius: 10px;
-            z-index: 5;
-        }
-
+        .fade-animation { animation: fadeInOut 3s ease-in-out; }
+        #renderCanvas { width: 100%; height: 100%; display: block; }
         #scoreDisplay {
-            position: absolute;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            color: #fff;
-            font-size: 32px;
-            font-weight: bold;
-            text-align: center;
-            background: rgba(0, 0, 0, 0.8);
-            padding: 15px 40px;
-            border-radius: 10px;
-            z-index: 5;
-            display: none;
-            text-shadow: 0 0 10px #0f0;
+            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+            color: #fff; font-size: 1.5rem; font-weight: bold; background: rgba(0,0,0,0.7);
+            padding: 10px 25px; border-radius: 10px; z-index: 5; display: none;
             border: 2px solid #0f0;
         }
-
-        @keyframes goalFlash {
-            0%, 100% { background: rgba(0, 0, 0, 0.8); }
-            50% { background: rgba(0, 255, 0, 0.3); }
+        #controls {
+            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+            color: #fff; font-size: 0.9rem; text-align: center;
+            background: rgba(0,0,0,0.7); padding: 10px 20px; border-radius: 10px;
+            z-index: 5; display: none;
         }
-
-        .goal-scored {
-            animation: goalFlash 0.5s ease-in-out 3;
-        }
-
+        #errorMsg { color: red; text-align: center; padding: 20px; display: none; }
         @media (max-width: 768px) {
-            #titleText {
-                font-size: 2.5rem;
-                letter-spacing: 4px;
-            }
-            
-            #controls {
-                font-size: 12px;
-                padding: 8px 15px;
-            }
-
-            #scoreDisplay {
-                font-size: 24px;
-                padding: 10px 30px;
-            }
+            #titleText { font-size: 2rem; }
+            #scoreDisplay { font-size: 1.2rem; padding: 8px 20px; top: 10px; }
+            #controls { font-size: 0.8rem; bottom: 10px; }
         }
     </style>
 </head>
@@ -125,403 +46,336 @@
     <div id="gameContainer">
         <div id="titleScreen">
             <div id="titleText">RED STUDIOS</div>
+            <div id="errorMsg"></div>
         </div>
         <canvas id="renderCanvas"></canvas>
         <div id="scoreDisplay">HOME 0 - 0 AWAY</div>
-        <div id="controls" style="display: none;">
-            WASD: Move | SPACEBAR: Kick Ball
-        </div>
+        <div id="controls">WASD: Move | SPACE: Kick</div>
     </div>
 
+    <!-- Load Three.js from CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"></script>
-
     <script>
+        // ========== MAIN GAME INITIALIZATION ==========
+        console.log("PRO FOOTBALL 26 - Starting...");
+
+        // Check if Three.js loaded
+        if (typeof THREE === 'undefined') {
+            document.getElementById('errorMsg').textContent = "ERROR: Could not load 3D engine. Check internet connection.";
+            document.getElementById('errorMsg').style.display = 'block';
+            throw new Error("Three.js not loaded");
+        }
+
         // Game state
         const gameState = {
-            scene: 'title', // 'title' or 'game'
+            scene: 'title',
             keys: {},
             ballVelocity: { x: 0, y: 0, z: 0 },
-            score: {
-                home: 0,
-                away: 0
-            }
+            score: { home: 0, away: 0 }
         };
 
-        // Three.js setup
-        let scene, camera, renderer;
-        let player, ball, pitch, playButton;
-        let goal1, goal2; // Goals at each end
-        const canvas = document.getElementById('renderCanvas');
+        // Global variables
+        let scene, camera, renderer, player, ball, pitch;
 
+        // ========== SETUP THREE.JS ==========
         function initThreeJS() {
-            // Scene
-            scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x000000);
-
-            // Camera
-            camera = new THREE.PerspectiveCamera(
-                75,
-                window.innerWidth / window.innerHeight,
-                0.1,
-                1000
-            );
-
-            // Renderer
-            renderer = new THREE.WebGLRenderer({ 
-                canvas: canvas,
-                antialias: true 
-            });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.shadowMap.enabled = true;
-            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            try {
+                // 1. Create scene
+                scene = new THREE.Scene();
+                scene.background = new THREE.Color(0x000000);
+                
+                // 2. Create camera
+                camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+                
+                // 3. Create renderer with error handling for WebGL
+                const canvas = document.getElementById('renderCanvas');
+                const contextOptions = { alpha: false, antialias: true };
+                
+                // Try WebGL, fallback to basic renderer
+                try {
+                    renderer = new THREE.WebGLRenderer({ canvas: canvas, ...contextOptions });
+                    console.log("WebGL renderer created successfully");
+                } catch (webglError) {
+                    console.warn("WebGL failed, trying Canvas renderer:", webglError);
+                    renderer = new THREE.CanvasRenderer({ canvas: canvas });
+                }
+                
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                renderer.setPixelRatio(window.devicePixelRatio);
+                
+            } catch (error) {
+                document.getElementById('errorMsg').textContent = "3D Setup Error: " + error.message;
+                document.getElementById('errorMsg').style.display = 'block';
+                throw error;
+            }
         }
 
+        // ========== CREATE TITLE SCENE ==========
         function createTitleScene() {
-            // Lighting for title scene
+            console.log("Creating title scene...");
+            
+            // Clear any existing objects
+            while(scene.children.length > 0) {
+                scene.remove(scene.children[0]);
+            }
+            
+            // Simple title lighting
             const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
             scene.add(ambientLight);
-
-            const pointLight = new THREE.PointLight(0x0f0, 1, 100);
-            pointLight.position.set(0, 5, 5);
-            scene.add(pointLight);
-
-            // Create 3D PLAY button
-            const buttonGeometry = new THREE.BoxGeometry(3, 1, 0.5);
-            const buttonMaterial = new THREE.MeshStandardMaterial({ 
-                color: 0x00ff00,
-                emissive: 0x00ff00,
-                emissiveIntensity: 0.3
-            });
-            playButton = new THREE.Mesh(buttonGeometry, buttonMaterial);
-            playButton.position.set(0, 0, 0);
-            playButton.castShadow = true;
-            playButton.visible = false;
+            
+            // Create a simple play button (green cube)
+            const buttonGeometry = new THREE.BoxGeometry(2, 0.8, 0.1);
+            const buttonMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+            const playButton = new THREE.Mesh(buttonGeometry, buttonMaterial);
+            playButton.position.set(0, -1, 0);
+            playButton.name = 'playButton';
             scene.add(playButton);
-
-            // Add text to button using canvas texture
-            const buttonCanvas = document.createElement('canvas');
-            buttonCanvas.width = 512;
-            buttonCanvas.height = 128;
-            const ctx = buttonCanvas.getContext('2d');
-            ctx.fillStyle = '#000';
-            ctx.fillRect(0, 0, 512, 128);
-            ctx.fillStyle = '#0f0';
-            ctx.font = 'bold 80px Arial';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText('PLAY', 256, 64);
-
-            const buttonTexture = new THREE.CanvasTexture(buttonCanvas);
-            const textMaterial = new THREE.MeshBasicMaterial({ 
-                map: buttonTexture,
-                transparent: true
-            });
-            const textPlane = new THREE.Mesh(
-                new THREE.PlaneGeometry(3, 0.75),
-                textMaterial
-            );
-            textPlane.position.z = 0.26;
-            playButton.add(textPlane);
-
-            camera.position.set(0, 0, 8);
+            
+            // Position camera for title
+            camera.position.set(0, 0, 5);
             camera.lookAt(0, 0, 0);
+            
+            // Start title animation
+            startTitleSequence();
+            
+            // Setup click handler for the button
+            setTimeout(() => {
+                const canvas = document.getElementById('renderCanvas');
+                canvas.addEventListener('click', function titleClickHandler(event) {
+                    const rect = canvas.getBoundingClientRect();
+                    const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+                    const y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+                    
+                    // Simple 2D button click detection (easier than raycaster on mobile)
+                    if (x > -0.3 && x < 0.3 && y > -0.2 && y < 0.2) {
+                        canvas.removeEventListener('click', titleClickHandler);
+                        startGame();
+                    }
+                });
+            }, 4000); // Wait for animation to finish
         }
 
-        function createGoal(zPosition) {
-            // Goal structure: 2 posts + 1 crossbar
-            const goalGroup = new THREE.Group();
-            const postMaterial = new THREE.MeshStandardMaterial({ 
-                color: 0xffffff,
-                metalness: 0.3,
-                roughness: 0.7
-            });
-
-            // Left post
-            const leftPost = new THREE.Mesh(
-                new THREE.BoxGeometry(0.2, 2.5, 0.2),
-                postMaterial
-            );
-            leftPost.position.set(-3.5, 1.25, zPosition);
-            leftPost.castShadow = true;
-            goalGroup.add(leftPost);
-
-            // Right post
-            const rightPost = new THREE.Mesh(
-                new THREE.BoxGeometry(0.2, 2.5, 0.2),
-                postMaterial
-            );
-            rightPost.position.set(3.5, 1.25, zPosition);
-            rightPost.castShadow = true;
-            goalGroup.add(rightPost);
-
-            // Crossbar
-            const crossbar = new THREE.Mesh(
-                new THREE.BoxGeometry(7.2, 0.2, 0.2),
-                postMaterial
-            );
-            crossbar.position.set(0, 2.5, zPosition);
-            crossbar.castShadow = true;
-            goalGroup.add(crossbar);
-
-            // Add a net effect (optional back plane)
-            const netMaterial = new THREE.MeshBasicMaterial({ 
-                color: 0xcccccc,
-                transparent: true,
-                opacity: 0.3,
-                side: THREE.DoubleSide
-            });
-            const net = new THREE.Mesh(
-                new THREE.PlaneGeometry(7, 2.5),
-                netMaterial
-            );
-            net.position.set(0, 1.25, zPosition - 0.1);
-            goalGroup.add(net);
-
-            return goalGroup;
+        // ========== TITLE SEQUENCE ==========
+        function startTitleSequence() {
+            console.log("Starting title sequence...");
+            const titleText = document.getElementById('titleText');
+            
+            // RED STUDIOS fade
+            titleText.textContent = 'RED STUDIOS';
+            titleText.classList.add('fade-animation');
+            
+            // Change to PRO FOOTBALL 26 after 3 seconds
+            setTimeout(() => {
+                titleText.classList.remove('fade-animation');
+                titleText.textContent = 'PRO FOOTBALL 26';
+                titleText.style.opacity = '1';
+                titleText.style.color = '#0f0';
+            }, 3000);
         }
 
+        // ========== CREATE GAME SCENE ==========
         function createGameScene() {
-            // Clear title scene
-            if (playButton) {
-                scene.remove(playButton);
-                playButton = null;
+            console.log("Creating game scene...");
+            
+            // Clear the scene
+            while(scene.children.length > 0) {
+                scene.remove(scene.children[0]);
             }
-            scene.clear();
-
+            
             // Reset score
-            gameState.score.home = 0;
-            gameState.score.away = 0;
+            gameState.score = { home: 0, away: 0 };
             updateScoreDisplay();
-
+            
             // Lighting
             const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
             scene.add(ambientLight);
-
+            
             const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-            directionalLight.position.set(10, 20, 10);
-            directionalLight.castShadow = true;
-            directionalLight.shadow.mapSize.width = 2048;
-            directionalLight.shadow.mapSize.height = 2048;
+            directionalLight.position.set(10, 20, 5);
             scene.add(directionalLight);
-
-            // Football pitch
-            const pitchGeometry = new THREE.BoxGeometry(20, 0.2, 30);
-            const pitchMaterial = new THREE.MeshStandardMaterial({ color: 0x00aa00 });
+            
+            // Football pitch (green plane)
+            const pitchGeometry = new THREE.PlaneGeometry(20, 30);
+            const pitchMaterial = new THREE.MeshBasicMaterial({ color: 0x00aa00, side: THREE.DoubleSide });
             pitch = new THREE.Mesh(pitchGeometry, pitchMaterial);
-            pitch.receiveShadow = true;
+            pitch.rotation.x = Math.PI / 2; // Lay it flat
             pitch.position.y = -0.1;
             scene.add(pitch);
-
-            // Pitch lines
-            const lineMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+            
+            // Pitch lines (white)
+            const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
             
             // Center line
-            const centerLine = new THREE.Mesh(
-                new THREE.BoxGeometry(20, 0.21, 0.2),
-                lineMaterial
-            );
-            centerLine.position.y = 0.01;
+            const centerPoints = [];
+            centerPoints.push(new THREE.Vector3(-10, 0.01, 0));
+            centerPoints.push(new THREE.Vector3(10, 0.01, 0));
+            const centerGeometry = new THREE.BufferGeometry().setFromPoints(centerPoints);
+            const centerLine = new THREE.Line(centerGeometry, lineMaterial);
             scene.add(centerLine);
-
-            // Goal lines
-            const goalLine1 = new THREE.Mesh(
-                new THREE.BoxGeometry(20, 0.21, 0.2),
-                lineMaterial
-            );
-            goalLine1.position.set(0, 0.01, -14.9);
-            scene.add(goalLine1);
-
-            const goalLine2 = new THREE.Mesh(
-                new THREE.BoxGeometry(20, 0.21, 0.2),
-                lineMaterial
-            );
-            goalLine2.position.set(0, 0.01, 14.9);
-            scene.add(goalLine2);
-
-            // Create goals at each end
-            goal1 = createGoal(-15); // Away goal (negative Z)
+            
+            // Goals (white boxes)
+            const goalMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+            
+            // Goal 1 (Negative Z end)
+            const goal1 = new THREE.Mesh(new THREE.BoxGeometry(6, 3, 0.5), goalMaterial);
+            goal1.position.set(0, 1.5, -15);
             scene.add(goal1);
-
-            goal2 = createGoal(15); // Home goal (positive Z)
+            
+            // Goal 2 (Positive Z end)
+            const goal2 = new THREE.Mesh(new THREE.BoxGeometry(6, 3, 0.5), goalMaterial);
+            goal2.position.set(0, 1.5, 15);
             scene.add(goal2);
-
-            // Red cube player
-            const playerGeometry = new THREE.BoxGeometry(1, 1, 1);
-            const playerMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000 });
+            
+            // Player (red cube)
+            const playerGeometry = new THREE.BoxGeometry(0.8, 0.8, 0.8);
+            const playerMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
             player = new THREE.Mesh(playerGeometry, playerMaterial);
-            player.position.set(0, 0.5, 10);
-            player.castShadow = true;
+            player.position.set(0, 0.4, 10);
             scene.add(player);
-
-            // White sphere ball
-            const ballGeometry = new THREE.SphereGeometry(0.4, 32, 32);
-            const ballMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff });
+            
+            // Ball (white sphere)
+            const ballGeometry = new THREE.SphereGeometry(0.3, 16, 16);
+            const ballMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
             ball = new THREE.Mesh(ballGeometry, ballMaterial);
-            ball.position.set(0, 0.4, 8);
-            ball.castShadow = true;
+            ball.position.set(0, 0.3, 8);
             scene.add(ball);
-
-            // Camera position
+            
+            // Camera position for gameplay
             camera.position.set(0, 15, 20);
             camera.lookAt(0, 0, 0);
-
-            // Reset ball velocity
+            
+            // Reset ball physics
             gameState.ballVelocity = { x: 0, y: 0, z: 0 };
+            
+            console.log("Game scene created successfully");
         }
 
+        // ========== GAME FUNCTIONS ==========
         function updateScoreDisplay() {
             const scoreDisplay = document.getElementById('scoreDisplay');
             scoreDisplay.textContent = `HOME ${gameState.score.home} - ${gameState.score.away} AWAY`;
         }
 
-        function resetBallToCenter() {
-            if (!ball) return;
-
-            ball.position.set(0, 0.4, 0);
-            gameState.ballVelocity = { x: 0, y: 0, z: 0 };
-
-            // Visual effect - flash the ball
-            const originalColor = ball.material.color.clone();
-            ball.material.color.setHex(0x00ff00);
-            setTimeout(() => {
-                if (ball) {
-                    ball.material.color.copy(originalColor);
-                }
-            }, 500);
-        }
-
         function checkGoal() {
             if (!ball) return;
-
+            
             const ballZ = ball.position.z;
-            const ballRadius = 0.4;
-
-            // Check if ball crossed the away goal line (negative Z)
-            if (ballZ < -15 - ballRadius) {
-                // Home team scores
+            
+            // Away goal (negative Z)
+            if (ballZ < -15) {
                 gameState.score.home++;
                 updateScoreDisplay();
-                flashScore();
-                resetBallToCenter();
+                resetBall();
+                console.log("GOAL! Home scores!");
             }
-            // Check if ball crossed the home goal line (positive Z)
-            else if (ballZ > 15 + ballRadius) {
-                // Away team scores
+            // Home goal (positive Z)
+            else if (ballZ > 15) {
                 gameState.score.away++;
                 updateScoreDisplay();
-                flashScore();
-                resetBallToCenter();
+                resetBall();
+                console.log("GOAL! Away scores!");
             }
         }
 
-        function flashScore() {
-            const scoreDisplay = document.getElementById('scoreDisplay');
-            scoreDisplay.classList.add('goal-scored');
-            setTimeout(() => {
-                scoreDisplay.classList.remove('goal-scored');
-            }, 1500);
+        function resetBall() {
+            if (!ball) return;
+            ball.position.set(0, 0.3, 0);
+            gameState.ballVelocity = { x: 0, y: 0, z: 0 };
         }
 
-        // Title screen sequence
-        function startTitleSequence() {
-            const titleText = document.getElementById('titleText');
+        function kickBall() {
+            if (!ball || !player) return;
             
-            // Show RED STUDIOS with fade animation
-            titleText.textContent = 'RED STUDIOS';
-            titleText.classList.add('fade-animation');
-
-            // After 3 seconds, show PRO FOOTBALL 26
-            setTimeout(() => {
-                titleText.classList.remove('fade-animation');
-                titleText.textContent = 'PRO FOOTBALL 26';
-                titleText.style.opacity = '1';
-
-                // Show PLAY button after title appears
-                setTimeout(() => {
-                    if (playButton) {
-                        playButton.visible = true;
-                        // Animate button appearing
-                        playButton.position.y = -3;
-                        new TWEEN.Tween(playButton.position)
-                            .to({ y: -1 }, 1000)
-                            .easing(TWEEN.Easing.Elastic.Out)
-                            .start();
-                    }
-                }, 500);
-            }, 3000);
-        }
-
-        // Handle play button interaction
-        let isHoveringButton = false;
-        const raycaster = new THREE.Raycaster();
-        const mouse = new THREE.Vector2();
-
-        function onMouseMove(event) {
-            if (gameState.scene !== 'title' || !playButton || !playButton.visible) return;
-
-            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-            raycaster.setFromCamera(mouse, camera);
-            const intersects = raycaster.intersectObject(playButton, true);
-
-            if (intersects.length > 0) {
-                if (!isHoveringButton) {
-                    isHoveringButton = true;
-                    document.body.style.cursor = 'pointer';
-                    new TWEEN.Tween(playButton.position)
-                        .to({ y: playButton.position.y + 0.3 }, 200)
-                        .easing(TWEEN.Easing.Quadratic.Out)
-                        .start();
-                    new TWEEN.Tween(playButton.scale)
-                        .to({ x: 1.1, y: 1.1, z: 1.1 }, 200)
-                        .easing(TWEEN.Easing.Quadratic.Out)
-                        .start();
-                }
-            } else {
-                if (isHoveringButton) {
-                    isHoveringButton = false;
-                    document.body.style.cursor = 'default';
-                    new TWEEN.Tween(playButton.position)
-                        .to({ y: playButton.position.y - 0.3 }, 200)
-                        .easing(TWEEN.Easing.Quadratic.Out)
-                        .start();
-                    new TWEEN.Tween(playButton.scale)
-                        .to({ x: 1, y: 1, z: 1 }, 200)
-                        .easing(TWEEN.Easing.Quadratic.Out)
-                        .start();
-                }
+            // Calculate direction from player to ball
+            const dx = ball.position.x - player.position.x;
+            const dz = ball.position.z - player.position.z;
+            const distance = Math.sqrt(dx * dx + dz * dz);
+            
+            // Kick if close enough
+            if (distance < 2) {
+                const power = 0.25;
+                gameState.ballVelocity.x = (dx / distance) * power;
+                gameState.ballVelocity.y = 0.15;
+                gameState.ballVelocity.z = (dz / distance) * power;
+                console.log("Ball kicked!");
             }
         }
 
-        function onMouseClick(event) {
-            if (gameState.scene !== 'title' || !playButton || !playButton.visible) return;
-
-            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-            raycaster.setFromCamera(mouse, camera);
-            const intersects = raycaster.intersectObject(playButton, true);
-
-            if (intersects.length > 0) {
-                startGame();
+        function updatePlayer() {
+            if (!player) return;
+            
+            const speed = 0.15;
+            
+            if (gameState.keys['w'] || gameState.keys['arrowup']) {
+                player.position.z -= speed;
             }
+            if (gameState.keys['s'] || gameState.keys['arrowdown']) {
+                player.position.z += speed;
+            }
+            if (gameState.keys['a'] || gameState.keys['arrowleft']) {
+                player.position.x -= speed;
+            }
+            if (gameState.keys['d'] || gameState.keys['arrowright']) {
+                player.position.x += speed;
+            }
+            
+            // Keep player on pitch
+            player.position.x = Math.max(-9.5, Math.min(9.5, player.position.x));
+            player.position.z = Math.max(-14.5, Math.min(14.5, player.position.z));
         }
 
+        function updateBall() {
+            if (!ball) return;
+            
+            // Apply velocity
+            ball.position.x += gameState.ballVelocity.x;
+            ball.position.y += gameState.ballVelocity.y;
+            ball.position.z += gameState.ballVelocity.z;
+            
+            // Simple gravity
+            gameState.ballVelocity.y -= 0.01;
+            
+            // Bounce on ground
+            if (ball.position.y < 0.3) {
+                ball.position.y = 0.3;
+                gameState.ballVelocity.y *= -0.6;
+                
+                // Stop if very small bounce
+                if (Math.abs(gameState.ballVelocity.y) < 0.02) {
+                    gameState.ballVelocity.y = 0;
+                }
+            }
+            
+            // Slow down over time
+            gameState.ballVelocity.x *= 0.99;
+            gameState.ballVelocity.z *= 0.99;
+            
+            // Check for goals
+            checkGoal();
+        }
+
+        // ========== START GAME ==========
         function startGame() {
+            console.log("Starting game...");
             gameState.scene = 'game';
+            
+            // Hide title, show game UI
             document.getElementById('titleScreen').style.display = 'none';
-            document.getElementById('controls').style.display = 'block';
             document.getElementById('scoreDisplay').style.display = 'block';
+            document.getElementById('controls').style.display = 'block';
+            
+            // Create the game world
             createGameScene();
+            
+            console.log("Game started successfully");
         }
 
-        // Keyboard controls
+        // ========== EVENT HANDLERS ==========
         function onKeyDown(event) {
-            gameState.keys[event.key.toLowerCase()] = true;
-
-            if (event.key === ' ' && gameState.scene === 'game') {
+            const key = event.key.toLowerCase();
+            gameState.keys[key] = true;
+            
+            if (key === ' ' && gameState.scene === 'game') {
                 event.preventDefault();
                 kickBall();
             }
@@ -531,73 +385,111 @@
             gameState.keys[event.key.toLowerCase()] = false;
         }
 
-        function kickBall() {
-            if (!ball || !player) return;
+        // Touch controls for mobile
+        function setupTouchControls() {
+            const canvas = document.getElementById('renderCanvas');
+            
+            // Virtual D-pad (simplified)
+            canvas.addEventListener('touchstart', function(event) {
+                event.preventDefault();
+                const touch = event.touches[0];
+                const rect = canvas.getBoundingClientRect();
+                const x = touch.clientX - rect.left;
+                const y = touch.clientY - rect.top;
+                
+                // Simple touch zones for movement
+                if (y > rect.height / 2) {
+                    gameState.keys['s'] = true; // Bottom = down
+                } else {
+                    gameState.keys['w'] = true; // Top = up
+                }
+                if (x < rect.width / 2) {
+                    gameState.keys['a'] = true; // Left = left
+                } else {
+                    gameState.keys['d'] = true; // Right = right
+                }
+            });
+            
+            canvas.addEventListener('touchend', function(event) {
+                gameState.keys['w'] = false;
+                gameState.keys['a'] = false;
+                gameState.keys['s'] = false;
+                gameState.keys['d'] = false;
+            });
+            
+            // Double tap to kick
+            let lastTap = 0;
+            canvas.addEventListener('touchend', function(event) {
+                const currentTime = new Date().getTime();
+                const tapLength = currentTime - lastTap;
+                if (tapLength < 500 && tapLength > 0) {
+                    kickBall(); // Double tap to kick
+                }
+                lastTap = currentTime;
+            });
+        }
 
-            const dx = ball.position.x - player.position.x;
-            const dz = ball.position.z - player.position.z;
-            const distance = Math.sqrt(dx * dx + dz * dz);
-
-            // Only kick if ball is close enough
-            if (distance < 2) {
-                const direction = new THREE.Vector3(dx, 0, dz).normalize();
-                gameState.ballVelocity.x = direction.x * 0.3;
-                gameState.ballVelocity.y = 0.2;
-                gameState.ballVelocity.z = direction.z * 0.3;
+        // ========== ANIMATION LOOP ==========
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            if (gameState.scene === 'game') {
+                updatePlayer();
+                updateBall();
+            }
+            
+            if (renderer && scene && camera) {
+                renderer.render(scene, camera);
             }
         }
 
-        function updatePlayer(deltaTime) {
-            if (!player) return;
-
-            const speed = 0.1;
-            let moved = false;
-
-            if (gameState.keys['w']) {
-                player.position.z -= speed;
-                moved = true;
-            }
-            if (gameState.keys['s']) {
-                player.position.z += speed;
-                moved = true;
-            }
-            if (gameState.keys['a']) {
-                player.position.x -= speed;
-                moved = true;
-            }
-            if (gameState.keys['d']) {
-                player.position.x += speed;
-                moved = true;
-            }
-
-            // Keep player on pitch
-            player.position.x = Math.max(-9, Math.min(9, player.position.x));
-            player.position.z = Math.max(-14, Math.min(14, player.position.z));
-
-            // Subtle rotation when moving
-            if (moved) {
-                player.rotation.y += 0.05;
+        // ========== INITIALIZE EVERYTHING ==========
+        function init() {
+            console.log("Initializing game...");
+            
+            try {
+                // Setup Three.js
+                initThreeJS();
+                
+                // Create initial title scene
+                createTitleScene();
+                
+                // Setup event listeners
+                window.addEventListener('keydown', onKeyDown);
+                window.addEventListener('keyup', onKeyUp);
+                window.addEventListener('resize', onWindowResize);
+                
+                // Setup mobile touch controls
+                setupTouchControls();
+                
+                // Start animation loop
+                animate();
+                
+                console.log("Game initialized successfully!");
+                
+            } catch (error) {
+                console.error("Fatal initialization error:", error);
+                document.getElementById('errorMsg').textContent = 
+                    "Failed to start game: " + error.message + ". Try refreshing.";
+                document.getElementById('errorMsg').style.display = 'block';
             }
         }
 
-        function updateBall(deltaTime) {
-            if (!ball) return;
+        function onWindowResize() {
+            if (camera && renderer) {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+        }
 
-            // Apply velocity
-            ball.position.x += gameState.ballVelocity.x;
-            ball.position.y += gameState.ballVelocity.y;
-            ball.position.z += gameState.ballVelocity.z;
+        // ========== START THE GAME WHEN PAGE LOADS ==========
+        window.addEventListener('load', function() {
+            console.log("Page loaded, starting init...");
+            // Small delay to ensure everything is ready
+            setTimeout(init, 100);
+        });
 
-            // Gravity
-            gameState.ballVelocity.y -= 0.01;
-
-            // Bounce on ground
-            if (ball.position.y <= 0.4) {
-                ball.position.y = 0.4;
-                gameState.ballVelocity.y *= -0.6;
-                gameState.ballVelocity.x *= 0.95;
-                gameState.ballVelocity.z *= 0.95;
-
-                // Stop if velocity is very low
-                if (Math.abs(gameState.ballVelocity.y) < 0.02) {
-                    game
+    </script>
+</body>
+</html>
