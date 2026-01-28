@@ -1,443 +1,559 @@
-// ==================== COMBINED MATCH ENHANCEMENTS SCRIPT ====================
-
-// AI Team Configuration
-const aiPlayers = [];
-const AI_SPEED = 0.08;
-const KICK_DISTANCE = 2;
-const KICK_FORCE = 0.3;
-
-// Power Meter Variables
-let powerLevel = 0;
-let isChargingPower = false;
-let powerMeterElement;
-
-// Game State Variables
-let matchTime = 0;
-let playerScore = 0;
-let aiScore = 0;
-let stamina = 100;
-let isSprinting = false;
-
-// CSS for UI Elements
-const styleSheet = document.createElement('style');
-styleSheet.textContent = `
-    #matchUI {
-        position: fixed;
-        top: 20px;
-        left: 20px;
-        color: white;
-        font-family: Arial, sans-serif;
-        font-size: 18px;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
-        z-index: 100;
-    }
-    
-    #matchUI div {
-        margin-bottom: 10px;
-        background: rgba(0,0,0,0.5);
-        padding: 8px 15px;
-        border-radius: 5px;
-        border-left: 4px solid #00ff00;
-    }
-    
-    #minimap {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        border: 3px solid #fff;
-        background: rgba(0,50,0,0.7);
-        border-radius: 5px;
-        z-index: 100;
-    }
-    
-    #powerMeter {
-        position: fixed;
-        bottom: 50px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 300px;
-        height: 30px;
-        background: rgba(0, 0, 0, 0.7);
-        border: 2px solid #fff;
-        border-radius: 5px;
-        overflow: hidden;
-        display: none;
-        z-index: 100;
-    }
-    
-    #powerFill {
-        width: 0%;
-        height: 100%;
-        background: linear-gradient(90deg, #00ff00, #ffff00, #ff0000);
-        transition: width 0.05s linear;
-    }
-`;
-document.head.appendChild(styleSheet);
-
-// ==================== AI OPPONENT SYSTEM ====================
-
-// Create 5 Blue AI Players
-function createAITeam() {
-    const aiPositions = [
-        { x: -15, z: 0 },   // Goalkeeper
-        { x: -8, z: -8 },   // Defender Left
-        { x: -8, z: 8 },    // Defender Right
-        { x: -5, z: -5 },   // Midfielder Left
-        { x: -5, z: 5 }     // Midfielder Right
-    ];
-
-    aiPositions.forEach((pos, index) => {
-        const aiGeometry = new THREE.BoxGeometry(1, 2, 1);
-        const aiMaterial = new THREE.MeshLambertMaterial({ color: 0x0066ff });
-        const aiCube = new THREE.Mesh(aiGeometry, aiMaterial);
-        
-        aiCube.position.set(pos.x, 1, pos.z);
-        aiCube.userData.homePosition = { x: pos.x, z: pos.z };
-        aiCube.userData.role = index === 0 ? 'goalkeeper' : 'field';
-        aiCube.userData.isTeammate = false;
-        
-        scene.add(aiCube);
-        aiPlayers.push(aiCube);
-    });
-}
-
-// AI Movement Logic
-function updateAI() {
-    aiPlayers.forEach(ai => {
-        // Calculate direction to ball
-        const dx = ball.position.x - ai.position.x;
-        const dz = ball.position.z - ai.position.z;
-        const distanceToBall = Math.sqrt(dx * dx + dz * dz);
-        
-        // Move toward ball
-        if (distanceToBall > 0.1) {
-            ai.position.x += (dx / distanceToBall) * AI_SPEED;
-            ai.position.z += (dz / distanceToBall) * AI_SPEED;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FIFA 26 - Match</title>
+    <style>
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
         }
         
-        // Kick ball if close enough
-        if (distanceToBall < KICK_DISTANCE) {
-            aiKickBall(ai);
-        }
-    });
-}
-
-// AI Kick Function (toward red player's goal)
-function aiKickBall(ai) {
-    // Assuming red player's goal is at x = 20 (right side)
-    const goalX = 20;
-    const goalZ = 0;
-    
-    const dx = goalX - ball.position.x;
-    const dz = goalZ - ball.position.z;
-    const distance = Math.sqrt(dx * dx + dz * dz);
-    
-    if (distance > 0) {
-        // Ensure ball has userData.velocity
-        if (!ball.userData.velocity) {
-            ball.userData.velocity = { x: 0, z: 0 };
+        body { 
+            font-family: 'Arial Black', Arial, sans-serif; 
+            overflow: hidden; 
+            background: #000; 
+            color: white;
         }
         
-        ball.userData.velocity.x = (dx / distance) * KICK_FORCE;
-        ball.userData.velocity.z = (dz / distance) * KICK_FORCE;
-    }
-}
-
-// ==================== POWER SHOT & PASSING SYSTEM ====================
-
-// Create Power Meter UI
-function createPowerMeter() {
-    powerMeterElement = document.createElement('div');
-    powerMeterElement.id = 'powerMeter';
-    
-    const powerFill = document.createElement('div');
-    powerFill.id = 'powerFill';
-    
-    powerMeterElement.appendChild(powerFill);
-    document.body.appendChild(powerMeterElement);
-}
-
-// Enhanced Kick with Power
-function kickBallWithPower() {
-    const power = powerLevel / 100; // Normalize to 0-1
-    const kickStrength = 0.2 + (power * 0.6); // 0.2 to 0.8 force
-    
-    // Calculate direction based on player facing direction
-    const direction = new THREE.Vector3();
-    camera.getWorldDirection(direction);
-    direction.y = 0;
-    direction.normalize();
-    
-    // Ensure ball has userData.velocity
-    if (!ball.userData.velocity) {
-        ball.userData.velocity = { x: 0, z: 0 };
-    }
-    
-    ball.userData.velocity = {
-        x: direction.x * kickStrength,
-        z: direction.z * kickStrength
-    };
-    
-    // Reset power
-    powerLevel = 0;
-    document.getElementById('powerFill').style.width = '0%';
-    powerMeterElement.style.display = 'none';
-}
-
-// Pass to Nearest Teammate
-function passBall() {
-    let nearestTeammate = null;
-    let minDistance = Infinity;
-    
-    // Find nearest AI player
-    aiPlayers.forEach(ai => {
-        const dx = ai.position.x - player.position.x;
-        const dz = ai.position.z - player.position.z;
-        const dist = Math.sqrt(dx * dx + dz * dz);
-        
-        if (dist < minDistance) {
-            minDistance = dist;
-            nearestTeammate = ai;
-        }
-    });
-    
-    if (nearestTeammate) {
-        const dx = nearestTeammate.position.x - ball.position.x;
-        const dz = nearestTeammate.position.z - ball.position.z;
-        const distance = Math.sqrt(dx * dx + dz * dz);
-        
-        const passForce = 0.25; // Lower force for passing
-        
-        // Ensure ball has userData.velocity
-        if (!ball.userData.velocity) {
-            ball.userData.velocity = { x: 0, z: 0 };
+        #gameContainer { 
+            width: 100vw; 
+            height: 100vh; 
+            position: relative; 
         }
         
-        ball.userData.velocity = {
-            x: (dx / distance) * passForce,
-            z: (dz / distance) * passForce
-        };
-    }
-}
+        canvas { 
+            display: block; 
+            width: 100%; 
+            height: 100%; 
+        }
+        
+        #matchUI {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            color: white;
+            font-family: Arial, sans-serif;
+            font-size: 18px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            z-index: 100;
+        }
+        
+        #matchUI div {
+            margin-bottom: 10px;
+            background: rgba(0,0,0,0.5);
+            padding: 8px 15px;
+            border-radius: 5px;
+            border-left: 4px solid #00ff00;
+        }
+        
+        #minimap {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            border: 3px solid #fff;
+            background: rgba(0,50,0,0.7);
+            border-radius: 5px;
+            z-index: 100;
+        }
+        
+        #powerMeter {
+            position: fixed;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 300px;
+            height: 30px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid #fff;
+            border-radius: 5px;
+            overflow: hidden;
+            display: none;
+            z-index: 100;
+        }
+        
+        #powerFill {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #00ff00, #ffff00, #ff0000);
+            transition: width 0.05s linear;
+        }
+        
+        #controls {
+            position: fixed;
+            bottom: 100px;
+            left: 20px;
+            color: #fff;
+            background: rgba(0,0,0,0.7);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas"></canvas>
+        <div id="controls">
+            WASD: Move | SPACE: Kick (Hold for power) | E: Pass | SHIFT: Sprint
+        </div>
+    </div>
 
-// Update Power Meter
-function updatePowerMeter() {
-    if (isChargingPower) {
-        powerLevel += 2; // Increase by 2% per frame
-        if (powerLevel > 100) powerLevel = 100;
-        document.getElementById('powerFill').style.width = powerLevel + '%';
-    }
-}
+    <!-- Three.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
-// ==================== ENHANCED MATCH UI SYSTEM ====================
-
-// Create UI Elements
-function createMatchUI() {
-    const matchUI = document.createElement('div');
-    matchUI.id = 'matchUI';
-    matchUI.innerHTML = `
-        <div id="timeDisplay">Time: 00:00</div>
-        <div id="scoreDisplay">Score: 0-0</div>
-        <div id="staminaDisplay">Stamina: 100%</div>
-    `;
-    document.body.appendChild(matchUI);
-}
-
-// Create Minimap Canvas
-function createMinimap() {
-    const minimap = document.createElement('canvas');
-    minimap.id = 'minimap';
-    minimap.width = 200;
-    minimap.height = 150;
-    document.body.appendChild(minimap);
-}
-
-// Update Stamina
-function updateStamina() {
-    if (isSprinting && stamina > 0) {
-        stamina -= 0.5; // Decrease on sprint
-        if (stamina < 0) stamina = 0;
-    } else if (!isSprinting && stamina < 100) {
-        stamina += 0.2; // Regenerate slowly
-        if (stamina > 100) stamina = 100;
-    }
-    
-    document.getElementById('staminaDisplay').textContent = 
-        `Stamina: ${Math.floor(stamina)}%`;
-    
-    // Change color based on stamina level
-    const staminaEl = document.getElementById('staminaDisplay');
-    if (stamina < 30) {
-        staminaEl.style.borderLeftColor = '#ff0000';
-    } else if (stamina < 60) {
-        staminaEl.style.borderLeftColor = '#ffff00';
-    } else {
-        staminaEl.style.borderLeftColor = '#00ff00';
-    }
-}
-
-// Update Match Time
-function updateMatchTime() {
-    matchTime += 1/60; // Assuming 60 FPS
-    const minutes = Math.floor(matchTime / 60);
-    const seconds = Math.floor(matchTime % 60);
-    document.getElementById('timeDisplay').textContent = 
-        `Time: ${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-}
-
-// Update Score
-function updateScore(team) {
-    if (team === 'player') playerScore++;
-    else aiScore++;
-    
-    document.getElementById('scoreDisplay').textContent = 
-        `Score: ${playerScore}-${aiScore}`;
-}
-
-// Draw Minimap
-function drawMinimap() {
-    const minimap = document.getElementById('minimap');
-    if (!minimap) return;
-    
-    const minimapCtx = minimap.getContext('2d');
-    
-    // Clear canvas
-    minimapCtx.fillStyle = 'rgba(0, 50, 0, 0.9)';
-    minimapCtx.fillRect(0, 0, 200, 150);
-    
-    // Draw pitch outline
-    minimapCtx.strokeStyle = '#fff';
-    minimapCtx.lineWidth = 2;
-    minimapCtx.strokeRect(5, 5, 190, 140);
-    
-    // Center line
-    minimapCtx.beginPath();
-    minimapCtx.moveTo(100, 5);
-    minimapCtx.lineTo(100, 145);
-    minimapCtx.stroke();
-    
-    // Scale factor (assuming pitch is 40x30 units)
-    const scaleX = 190 / 40;
-    const scaleZ = 140 / 30;
-    
-    // Draw player (red dot)
-    const playerX = 100 + (player.position.x * scaleX);
-    const playerZ = 75 + (player.position.z * scaleZ);
-    minimapCtx.fillStyle = '#ff0000';
-    minimapCtx.beginPath();
-    minimapCtx.arc(playerX, playerZ, 5, 0, Math.PI * 2);
-    minimapCtx.fill();
-    
-    // Draw ball (white dot)
-    const ballX = 100 + (ball.position.x * scaleX);
-    const ballZ = 75 + (ball.position.z * scaleZ);
-    minimapCtx.fillStyle = '#ffffff';
-    minimapCtx.beginPath();
-    minimapCtx.arc(ballX, ballZ, 3, 0, Math.PI * 2);
-    minimapCtx.fill();
-    
-    // Draw AI players (blue dots)
-    aiPlayers.forEach(ai => {
-        const aiX = 100 + (ai.position.x * scaleX);
-        const aiZ = 75 + (ai.position.z * scaleZ);
-        minimapCtx.fillStyle = '#0066ff';
-        minimapCtx.beginPath();
-        minimapCtx.arc(aiX, aiZ, 4, 0, Math.PI * 2);
-        minimapCtx.fill();
-    });
-}
-
-// ==================== EVENT HANDLERS ====================
-
-function setupEventHandlers() {
-    // Keyboard Event Listeners
-    document.addEventListener('keydown', (e) => {
-        if (e.code === 'Space') {
-            if (!isChargingPower) {
-                isChargingPower = true;
-                powerMeterElement.style.display = 'block';
+    <!-- GAME SCRIPT - EVERYTHING BELOW IS ONE COMPLETE SCRIPT -->
+    <script>
+        // ==================== BASIC GAME SETUP ====================
+        console.log("FIFA 26 Match - Loading...");
+        
+        // Core Three.js variables
+        let scene, camera, renderer, player, ball;
+        const canvas = document.getElementById('gameCanvas');
+        
+        // Initialize Three.js scene
+        function initThreeJS() {
+            // Create scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x000000);
+            
+            // Create camera
+            camera = new THREE.PerspectiveCamera(
+                75,
+                window.innerWidth / window.innerHeight,
+                0.1,
+                1000
+            );
+            camera.position.set(0, 20, 30);
+            camera.lookAt(0, 0, 0);
+            
+            // Create renderer
+            renderer = new THREE.WebGLRenderer({ 
+                canvas: canvas,
+                antialias: true 
+            });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            
+            console.log("Three.js initialized");
+        }
+        
+        // Create basic game world
+        function createGameWorld() {
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(10, 20, 5);
+            scene.add(directionalLight);
+            
+            // Football pitch (green plane)
+            const pitchGeometry = new THREE.PlaneGeometry(40, 30);
+            const pitchMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0x00aa00, 
+                side: THREE.DoubleSide 
+            });
+            const pitch = new THREE.Mesh(pitchGeometry, pitchMaterial);
+            pitch.rotation.x = Math.PI / 2;
+            pitch.position.y = -0.1;
+            scene.add(pitch);
+            
+            // Goals
+            const goalMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+            const goal1 = new THREE.Mesh(new THREE.BoxGeometry(8, 4, 1), goalMaterial);
+            goal1.position.set(0, 2, -15);
+            scene.add(goal1);
+            
+            const goal2 = new THREE.Mesh(new THREE.BoxGeometry(8, 4, 1), goalMaterial);
+            goal2.position.set(0, 2, 15);
+            scene.add(goal2);
+            
+            // Player (red cube)
+            const playerGeometry = new THREE.BoxGeometry(1, 2, 1);
+            const playerMaterial = new THREE.MeshLambertMaterial({ color: 0xff0000 });
+            player = new THREE.Mesh(playerGeometry, playerMaterial);
+            player.position.set(0, 1, 0);
+            player.castShadow = true;
+            scene.add(player);
+            
+            // Ball (white sphere)
+            const ballGeometry = new THREE.SphereGeometry(0.5, 16, 16);
+            const ballMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff });
+            ball = new THREE.Mesh(ballGeometry, ballMaterial);
+            ball.position.set(0, 0.5, 5);
+            ball.castShadow = true;
+            ball.userData = { velocity: { x: 0, y: 0, z: 0 } };
+            scene.add(ball);
+            
+            console.log("Game world created");
+        }
+        
+        // Basic keyboard controls
+        const keys = {};
+        function setupBasicControls() {
+            window.addEventListener('keydown', (e) => {
+                keys[e.key.toLowerCase()] = true;
+            });
+            
+            window.addEventListener('keyup', (e) => {
+                keys[e.key.toLowerCase()] = false;
+            });
+            
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+        }
+        
+        // Basic player movement
+        function updateBasicPlayer() {
+            const speed = 0.15;
+            
+            if (keys['w'] || keys['arrowup']) player.position.z -= speed;
+            if (keys['s'] || keys['arrowdown']) player.position.z += speed;
+            if (keys['a'] || keys['arrowleft']) player.position.x -= speed;
+            if (keys['d'] || keys['arrowright']) player.position.x += speed;
+            
+            // Keep player on pitch
+            player.position.x = Math.max(-19, Math.min(19, player.position.x));
+            player.position.z = Math.max(-14, Math.min(14, player.position.z));
+        }
+        
+        // Basic ball physics
+        function updateBasicBall() {
+            // Apply velocity
+            ball.position.x += ball.userData.velocity.x;
+            ball.position.z += ball.userData.velocity.z;
+            
+            // Slow down over time
+            ball.userData.velocity.x *= 0.98;
+            ball.userData.velocity.z *= 0.98;
+            
+            // Basic kick (spacebar)
+            if (keys[' ']) {
+                const dx = ball.position.x - player.position.x;
+                const dz = ball.position.z - player.position.z;
+                const distance = Math.sqrt(dx * dx + dz * dz);
+                
+                if (distance < 3) {
+                    const kickForce = 0.2;
+                    ball.userData.velocity.x = (dx / distance) * kickForce;
+                    ball.userData.velocity.z = (dz / distance) * kickForce;
+                }
+            }
+            
+            // Keep ball on pitch
+            if (Math.abs(ball.position.x) > 20) {
+                ball.position.x = Math.sign(ball.position.x) * 20;
+                ball.userData.velocity.x *= -0.5;
+            }
+            if (Math.abs(ball.position.z) > 15) {
+                ball.position.z = Math.sign(ball.position.z) * 15;
+                ball.userData.velocity.z *= -0.5;
             }
         }
         
-        if (e.code === 'KeyE') {
-            passBall();
+        // ==================== ENHANCEMENTS SCRIPT ====================
+        
+        // AI Team Configuration
+        const aiPlayers = [];
+        const AI_SPEED = 0.08;
+        const KICK_DISTANCE = 2;
+        const KICK_FORCE = 0.3;
+        
+        // Power Meter Variables
+        let powerLevel = 0;
+        let isChargingPower = false;
+        let powerMeterElement;
+        
+        // Game State Variables
+        let matchTime = 0;
+        let playerScore = 0;
+        let aiScore = 0;
+        let stamina = 100;
+        let isSprinting = false;
+        
+        // ==================== AI OPPONENT SYSTEM ====================
+        
+        // Create 5 Blue AI Players
+        function createAITeam() {
+            const aiPositions = [
+                { x: -15, z: 0 },   // Goalkeeper
+                { x: -8, z: -8 },   // Defender Left
+                { x: -8, z: 8 },    // Defender Right
+                { x: -5, z: -5 },   // Midfielder Left
+                { x: -5, z: 5 }     // Midfielder Right
+            ];
+        
+            aiPositions.forEach((pos, index) => {
+                const aiGeometry = new THREE.BoxGeometry(1, 2, 1);
+                const aiMaterial = new THREE.MeshLambertMaterial({ color: 0x0066ff });
+                const aiCube = new THREE.Mesh(aiGeometry, aiMaterial);
+                
+                aiCube.position.set(pos.x, 1, pos.z);
+                aiCube.userData.homePosition = { x: pos.x, z: pos.z };
+                aiCube.userData.role = index === 0 ? 'goalkeeper' : 'field';
+                aiCube.userData.isTeammate = false;
+                
+                scene.add(aiCube);
+                aiPlayers.push(aiCube);
+            });
+            
+            console.log("AI team created: 5 players");
         }
         
-        if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') {
-            isSprinting = true;
-        }
-    });
-    
-    document.addEventListener('keyup', (e) => {
-        if (e.code === 'Space' && isChargingPower) {
-            isChargingPower = false;
-            kickBallWithPower();
+        // AI Movement Logic
+        function updateAI() {
+            aiPlayers.forEach(ai => {
+                // Calculate direction to ball
+                const dx = ball.position.x - ai.position.x;
+                const dz = ball.position.z - ai.position.z;
+                const distanceToBall = Math.sqrt(dx * dx + dz * dz);
+                
+                // Move toward ball
+                if (distanceToBall > 0.1) {
+                    ai.position.x += (dx / distanceToBall) * AI_SPEED;
+                    ai.position.z += (dz / distanceToBall) * AI_SPEED;
+                }
+                
+                // Kick ball if close enough
+                if (distanceToBall < KICK_DISTANCE) {
+                    aiKickBall(ai);
+                }
+            });
         }
         
-        if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') {
-            isSprinting = false;
+        // AI Kick Function
+        function aiKickBall(ai) {
+            const goalX = 0;
+            const goalZ = 15;
+            
+            const dx = goalX - ball.position.x;
+            const dz = goalZ - ball.position.z;
+            const distance = Math.sqrt(dx * dx + dz * dz);
+            
+            if (distance > 0) {
+                ball.userData.velocity.x = (dx / distance) * KICK_FORCE;
+                ball.userData.velocity.z = (dz / distance) * KICK_FORCE;
+            }
         }
-    });
-}
-
-// ==================== INITIALIZATION ====================
-
-function initializeMatchEnhancements() {
-    // Create all UI elements
-    createMatchUI();
-    createMinimap();
-    createPowerMeter();
-    
-    // Create AI team
-    createAITeam();
-    
-    // Setup event handlers
-    setupEventHandlers();
-    
-    console.log('Match enhancements initialized!');
-}
-
-// ==================== ANIMATION LOOP INTEGRATION ====================
-
-// Store original animate function reference
-const originalAnimate = window.animate || function() {};
-
-// Enhanced animate function
-function enhancedAnimate() {
-    requestAnimationFrame(enhancedAnimate);
-    
-    // Update all systems
-    updateAI();
-    updatePowerMeter();
-    updateStamina();
-    updateMatchTime();
-    drawMinimap();
-    
-    // Call original animate function if it exists
-    if (typeof originalAnimate === 'function') {
-        originalAnimate();
-    } else {
-        // Fallback rendering
-        if (renderer && scene && camera) {
-            renderer.render(scene, camera);
+        
+        // ==================== POWER SHOT & PASSING SYSTEM ====================
+        
+        // Create Power Meter UI
+        function createPowerMeter() {
+            powerMeterElement = document.createElement('div');
+            powerMeterElement.id = 'powerMeter';
+            
+            const powerFill = document.createElement('div');
+            powerFill.id = 'powerFill';
+            
+            powerMeterElement.appendChild(powerFill);
+            document.body.appendChild(powerMeterElement);
+            
+            console.log("Power meter created");
         }
-    }
-}
-
-// Replace the animate function
-window.animate = enhancedAnimate;
-
-// ==================== AUTO-INITIALIZATION ====================
-
-// Initialize when the game scene is ready
-if (typeof scene !== 'undefined' && scene) {
-    setTimeout(initializeMatchEnhancements, 1000);
-} else {
-    // Wait for scene to be created
-    const sceneCheckInterval = setInterval(() => {
-        if (typeof scene !== 'undefined' && scene) {
-            clearInterval(sceneCheckInterval);
-            setTimeout(initializeMatchEnhancements, 1000);
+        
+        // Enhanced Kick with Power
+        function kickBallWithPower() {
+            const power = powerLevel / 100;
+            const kickStrength = 0.2 + (power * 0.6);
+            
+            const dx = ball.position.x - player.position.x;
+            const dz = ball.position.z - player.position.z;
+            const distance = Math.sqrt(dx * dx + dz * dz);
+            
+            if (distance < 3) {
+                ball.userData.velocity.x = (dx / distance) * kickStrength;
+                ball.userData.velocity.z = (dz / distance) * kickStrength;
+            }
+            
+            powerLevel = 0;
+            document.getElementById('powerFill').style.width = '0%';
+            powerMeterElement.style.display = 'none';
         }
-    }, 100);
-}
+        
+        // Pass to Nearest Teammate
+        function passBall() {
+            let nearestTeammate = null;
+            let minDistance = Infinity;
+            
+            aiPlayers.forEach(ai => {
+                const dx = ai.position.x - player.position.x;
+                const dz = ai.position.z - player.position.z;
+                const dist = Math.sqrt(dx * dx + dz * dz);
+                
+                if (dist < minDistance) {
+                    minDistance = dist;
+                    nearestTeammate = ai;
+                }
+            });
+            
+            if (nearestTeammate) {
+                const dx = nearestTeammate.position.x - ball.position.x;
+                const dz = nearestTeammate.position.z - ball.position.z;
+                const distance = Math.sqrt(dx * dx + dz * dz);
+                
+                const passForce = 0.25;
+                ball.userData.velocity.x = (dx / distance) * passForce;
+                ball.userData.velocity.z = (dz / distance) * passForce;
+            }
+        }
+        
+        // Update Power Meter
+        function updatePowerMeter() {
+            if (isChargingPower) {
+                powerLevel += 2;
+                if (powerLevel > 100) powerLevel = 100;
+                document.getElementById('powerFill').style.width = powerLevel + '%';
+            }
+        }
+        
+        // ==================== ENHANCED MATCH UI SYSTEM ====================
+        
+        // Create UI Elements
+        function createMatchUI() {
+            const matchUI = document.createElement('div');
+            matchUI.id = 'matchUI';
+            matchUI.innerHTML = `
+                <div id="timeDisplay">Time: 00:00</div>
+                <div id="scoreDisplay">Score: 0-0</div>
+                <div id="staminaDisplay">Stamina: 100%</div>
+            `;
+            document.body.appendChild(matchUI);
+        }
+        
+        // Create Minimap Canvas
+        function createMinimap() {
+            const minimap = document.createElement('canvas');
+            minimap.id = 'minimap';
+            minimap.width = 200;
+            minimap.height = 150;
+            document.body.appendChild(minimap);
+        }
+        
+        // Update Stamina
+        function updateStamina() {
+            if (isSprinting && stamina > 0) {
+                stamina -= 0.5;
+                if (stamina < 0) stamina = 0;
+            } else if (!isSprinting && stamina < 100) {
+                stamina += 0.2;
+                if (stamina > 100) stamina = 100;
+            }
+            
+            document.getElementById('staminaDisplay').textContent = 
+                `Stamina: ${Math.floor(stamina)}%`;
+            
+            const staminaEl = document.getElementById('staminaDisplay');
+            if (stamina < 30) {
+                staminaEl.style.borderLeftColor = '#ff0000';
+            } else if (stamina < 60) {
+                staminaEl.style.borderLeftColor = '#ffff00';
+            } else {
+                staminaEl.style.borderLeftColor = '#00ff00';
+            }
+        }
+        
+        // Update Match Time
+        function updateMatchTime() {
+            matchTime += 1/60;
+            const minutes = Math.floor(matchTime / 60);
+            const seconds = Math.floor(matchTime % 60);
+            document.getElementById('timeDisplay').textContent = 
+                `Time: ${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+        
+        // Update Score
+        function updateScore(team) {
+            if (team === 'player') playerScore++;
+            else aiScore++;
+            
+            document.getElementById('scoreDisplay').textContent = 
+                `Score: ${playerScore}-${aiScore}`;
+        }
+        
+        // Draw Minimap
+        function drawMinimap() {
+            const minimap = document.getElementById('minimap');
+            if (!minimap) return;
+            
+            const minimapCtx = minimap.getContext('2d');
+            
+            // Clear canvas
+            minimapCtx.fillStyle = 'rgba(0, 50, 0, 0.9)';
+            minimapCtx.fillRect(0, 0, 200, 150);
+            
+            // Draw pitch outline
+            minimapCtx.strokeStyle = '#fff';
+            minimapCtx.lineWidth = 2;
+            minimapCtx.strokeRect(5, 5, 190, 140);
+            
+            // Center line
+            minimapCtx.beginPath();
+            minimapCtx.moveTo(100, 5);
+            minimapCtx.lineTo(100, 145);
+            minimapCtx.stroke();
+            
+            // Scale factor
+            const scaleX = 190 / 40;
+            const scaleZ = 140 / 30;
+            
+            // Draw player (red dot)
+            const playerX = 100 + (player.position.x * scaleX);
+            const playerZ = 75 + (player.position.z * scaleZ);
+            minimapCtx.fillStyle = '#ff0000';
+            minimapCtx.beginPath();
+            minimapCtx.arc(playerX, playerZ, 5, 0, Math.PI * 2);
+            minimapCtx.fill();
+            
+            // Draw ball (white dot)
+            const ballX = 100 + (ball.position.x * scaleX);
+            const ballZ = 75 + (ball.position.z * scaleZ);
+            minimapCtx.fillStyle = '#ffffff';
+            minimapCtx.beginPath();
+            minimapCtx.arc(ballX, ballZ, 3, 0, Math.PI * 2);
+            minimapCtx.fill();
+            
+            // Draw AI players (blue dots)
+            aiPlayers.forEach(ai => {
+                const aiX = 100 + (ai.position.x * scaleX);
+                const aiZ = 75 + (ai.position.z * scaleZ);
+                minimapCtx.fillStyle = '#0066ff';
+                minimapCtx.beginPath();
+                minimapCtx.arc(aiX, aiZ, 4, 0, Math.PI * 2);
+                minimapCtx.fill();
+            });
+        }
+        
+        // ==================== ENHANCED EVENT HANDLERS ====================
+        
+        function setupEnhancedEventHandlers() {
+            // Enhanced keyboard controls
+            document.addEventListener('keydown', (e) => {
+                if (e.code === 'Space') {
+                    if (!isChargingPower) {
+                        isChargingPower = true;
+                        powerMeterElement.style.display = 'block';
+                    }
+                }
+                
+                if (e.code === 'KeyE') {
+                    passBall();
+                }
+                
+                if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') {
+                    isSprinting = true;
+                }
+            });
+            
+            document.addEventListener('keyup', (e) => {
+                if (e.code === 'Space' && isChargingPower) {
+                    isChargingPower = false;
+                    kickBallWithPower();
+                
