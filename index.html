@@ -3,585 +3,601 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pro Football 26 - Red Studios</title>
+    <title>PRO FOOTBALL 26</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: 'Arial Black', sans-serif;
-            background: #000;
-            color: white;
-            overflow-x: hidden;
-            touch-action: manipulation;
-        }
-        
-        /* ===== LOADING SCREEN ===== */
-        #loading {
-            position: fixed;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, #000, #001100);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-        
-        .loading-logo {
-            font-size: 4rem;
-            color: #ff0000;
-            text-shadow: 0 0 20px #ff0000;
-            animation: pulse 2s infinite;
-            margin-bottom: 10px;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.05); opacity: 0.8; }
-        }
-        
-        .countdown {
-            font-size: 3rem;
-            color: #ffff00;
-            margin: 20px 0;
-            font-weight: bold;
-        }
-        
-        .progress-container {
-            width: 300px;
-            height: 20px;
-            background: #333;
-            border-radius: 10px;
+            font-family: 'Arial Black', Arial, sans-serif;
             overflow: hidden;
-            margin: 20px;
-            border: 2px solid #00ff00;
-        }
-        
-        .progress-bar {
-            height: 100%;
-            background: linear-gradient(90deg, #00aa00, #00ff00);
-            width: 0%;
-            border-radius: 8px;
-            transition: width 0.3s;
-        }
-        
-        /* ===== ALL GAME SCREENS ===== */
-        .screen {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            display: none;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
             background: #000;
-            overflow-y: auto;
-            padding: 20px 0;
         }
-        
-        /* ===== TITLE SCREEN ===== */
+
+        #gameContainer {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
         #titleScreen {
-            background: linear-gradient(180deg, #000, #001a00);
-        }
-        
-        #redStudios {
-            font-size: 4rem;
-            color: #ff0000;
-            animation: fadeInOut 3s infinite;
-            text-align: center;
-        }
-        
-        @keyframes fadeInOut {
-            0%, 100% { opacity: 0; transform: translateY(-20px); }
-            50% { opacity: 1; transform: translateY(0); }
-        }
-        
-        #proFootball {
-            font-size: 3rem;
-            color: #00ff00;
-            margin: 30px 0;
-            text-shadow: 0 0 15px #00ff00;
-        }
-        
-        .btn {
-            padding: 15px 40px;
-            font-size: 1.5rem;
-            background: linear-gradient(45deg, #00aa00, #00ff00);
-            color: white;
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
-            margin: 20px;
-            font-weight: bold;
-            transition: all 0.3s;
-            box-shadow: 0 5px 15px rgba(0, 255, 0, 0.3);
-        }
-        
-        .btn:hover {
-            transform: scale(1.1);
-            box-shadow: 0 8px 25px rgba(0, 255, 0, 0.5);
-        }
-        
-        /* ===== CUTSCENE SCREEN ===== */
-        #cutsceneScreen {
-            background: #000;
-        }
-        
-        #cutsceneCanvas {
-            width: 90%;
-            height: 60%;
-            background: #001100;
-            position: relative;
-            overflow: hidden;
-            border-radius: 20px;
-            border: 3px solid #00ff00;
-            margin-bottom: 20px;
-        }
-        
-        .goal-text {
             position: absolute;
-            top: 30%;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 2.5rem;
-            color: #ffff00;
-            text-shadow: 3px 3px 0 #000;
-            background: rgba(0, 0, 0, 0.8);
-            padding: 20px;
-            border-radius: 15px;
-            border: 2px solid #ff0000;
-            display: none;
-            text-align: center;
-            z-index: 100;
-            animation: goalText 2s infinite;
-        }
-        
-        @keyframes goalText {
-            0%, 100% { transform: translateX(-50%) scale(1); }
-            50% { transform: translateX(-50%) scale(1.05); }
-        }
-        
-        /* ===== EDITOR SCREEN ===== */
-        #editorScreen {
-            background: linear-gradient(180deg, #000, #111);
-            justify-content: flex-start;
-            padding-top: 20px;
-        }
-        
-        .editor-title {
-            font-size: 2.5rem;
-            color: #00ff00;
-            margin: 20px 0;
-            text-align: center;
-        }
-        
-        .player-display-container {
-            width: 300px;
-            height: 400px;
-            background: #222;
-            border-radius: 20px;
-            border: 3px solid #00ff00;
-            margin: 20px auto;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
             display: flex;
+            flex-direction: column;
+            justify-content: center;
             align-items: center;
-            justify-content: center;
-            position: relative;
-            box-shadow: 0 10px 30px rgba(0, 255, 0, 0.2);
+            z-index: 10;
         }
-        
-        .player-display {
-            font-size: 5rem;
-            text-align: center;
+
+        #titleText {
+            font-size: 4rem;
+            color: #0f0;
+            text-shadow: 0 0 20px #0f0, 0 0 40px #0f0;
+            letter-spacing: 8px;
+            opacity: 0;
         }
-        
-        .editor-tabs {
-            display: flex;
-            gap: 10px;
-            margin: 20px;
-            flex-wrap: wrap;
-            justify-content: center;
+
+        @keyframes fadeInOut {
+            0% { opacity: 0; }
+            20% { opacity: 1; }
+            80% { opacity: 1; }
+            100% { opacity: 0; }
         }
-        
-        .tab-btn {
-            padding: 12px 25px;
-            background: #333;
-            color: white;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            font-size: 1.1rem;
-            transition: all 0.3s;
+
+        .fade-animation {
+            animation: fadeInOut 3s ease-in-out;
         }
-        
-        .tab-btn.active {
-            background: #00aa00;
-            color: white;
-            transform: scale(1.05);
-        }
-        
-        .tab-content {
-            width: 90%;
-            max-width: 1200px;
-            background: rgba(50, 50, 50, 0.7);
-            border-radius: 15px;
-            padding: 20px;
-            margin: 10px;
-            display: none;
-            max-height: 300px;
-            overflow-y: auto;
-        }
-        
-        .tab-content.active {
+
+        #renderCanvas {
+            width: 100%;
+            height: 100%;
             display: block;
         }
-        
-        .option-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-            gap: 15px;
-            margin-top: 15px;
-        }
-        
-        .option-btn {
-            padding: 15px;
-            background: #444;
-            color: white;
-            border: none;
+
+        #controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #fff;
+            font-size: 14px;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px 20px;
             border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 5px;
+            z-index: 5;
         }
-        
-        .option-btn:hover {
-            background: #555;
-            transform: scale(1.05);
-        }
-        
-        .option-btn.active {
-            background: #00aa00;
-            color: white;
-            border: 2px solid #00ff00;
-        }
-        
-        .option-icon {
-            font-size: 1.8rem;
-            margin-bottom: 5px;
-        }
-        
-        .color-option {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            margin: 5px;
-            cursor: pointer;
-            border: 3px solid transparent;
-            transition: all 0.3s;
-        }
-        
-        .color-option:hover {
-            transform: scale(1.2);
-        }
-        
-        .color-option.active {
-            border-color: #00ff00;
-            box-shadow: 0 0 10px #00ff00;
-        }
-        
-        .color-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            justify-content: center;
-            margin-top: 15px;
-        }
-        
-        /* ===== CLUB SELECTION ===== */
-        .club-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-            margin: 30px;
-            max-width: 600px;
-        }
-        
-        .club-card {
-            background: #222;
-            padding: 25px;
-            border-radius: 15px;
+
+        #scoreDisplay {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #fff;
+            font-size: 32px;
+            font-weight: bold;
             text-align: center;
-            cursor: pointer;
-            transition: all 0.3s;
-            border: 3px solid #444;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px 40px;
+            border-radius: 10px;
+            z-index: 5;
+            display: none;
+            text-shadow: 0 0 10px #0f0;
+            border: 2px solid #0f0;
         }
-        
-        .club-card:hover {
-            transform: scale(1.05);
-            border-color: #00ff00;
+
+        @keyframes goalFlash {
+            0%, 100% { background: rgba(0, 0, 0, 0.8); }
+            50% { background: rgba(0, 255, 0, 0.3); }
         }
-        
-        .club-card.active {
-            background: #00aa00;
-            border-color: #00ff00;
+
+        .goal-scored {
+            animation: goalFlash 0.5s ease-in-out 3;
         }
-        
-        .club-logo {
-            font-size: 3rem;
-            margin-bottom: 10px;
-        }
-        
-        /* ===== MATCH MODE ===== */
-        .mode-container {
-            display: flex;
-            flex-direction: column;
-            gap: 30px;
-            margin: 40px;
-            max-width: 500px;
-        }
-        
-        .mode-card {
-            background: #222;
-            padding: 30px;
-            border-radius: 20px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s;
-            border: 3px solid #444;
-        }
-        
-        .mode-card:hover {
-            transform: scale(1.05);
-            border-color: #00ff00;
-        }
-        
-        .mode-card.active {
-            background: #00aa00;
-            border-color: #00ff00;
-        }
-        
-        /* ===== ANIMATION CLASSES ===== */
-        @keyframes playerRun {
-            0% { transform: translateX(-100px) translateY(0); }
-            25% { transform: translateX(-50px) translateY(-10px); }
-            50% { transform: translateX(0) translateY(0); }
-            75% { transform: translateX(50px) translateY(-10px); }
-            100% { transform: translateX(100px) translateY(0); }
-        }
-        
-        @keyframes playerCelebrate {
-            0% { transform: translateY(0) rotate(0); }
-            25% { transform: translateY(-20px) rotate(-10deg); }
-            50% { transform: translateY(-40px) rotate(0); }
-            75% { transform: translateY(-20px) rotate(10deg); }
-            100% { transform: translateY(0) rotate(0); }
-        }
-        
-        .running { animation: playerRun 1s infinite; }
-        .celebrating { animation: playerCelebrate 0.5s infinite; }
-        .dribbling { animation: playerRun 0.8s infinite; }
-        .shooting { 
-            animation: shooting 0.3s;
-            transform-origin: bottom center;
-        }
-        
-        @keyframes shooting {
-            0% { transform: rotate(0); }
-            50% { transform: rotate(-30deg); }
-            100% { transform: rotate(0); }
+
+        @media (max-width: 768px) {
+            #titleText {
+                font-size: 2.5rem;
+                letter-spacing: 4px;
+            }
+            
+            #controls {
+                font-size: 12px;
+                padding: 8px 15px;
+            }
+
+            #scoreDisplay {
+                font-size: 24px;
+                padding: 10px 30px;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- ===== LOADING SCREEN ===== -->
-    <div id="loading">
-        <div class="loading-logo">PRO FOOTBALL 26</div>
-        <div style="color: #00ff00; font-size: 1.5rem; margin-bottom: 20px;">RED STUDIOS PRESENTS</div>
-        <div class="countdown" id="countdown">3</div>
-        <div class="progress-container">
-            <div class="progress-bar" id="progressBar"></div>
+    <div id="gameContainer">
+        <div id="titleScreen">
+            <div id="titleText">RED STUDIOS</div>
         </div>
-        <div style="color: #aaa; margin-top: 20px; text-align: center;">
-            <div>⚽ Loading Ronaldo 2008 vs Arsenal Cutscene...</div>
-            <div>🎮 Preparing Career Mode Editor...</div>
-            <div>🏆 Initializing FIFA-like Features...</div>
+        <canvas id="renderCanvas"></canvas>
+        <div id="scoreDisplay">HOME 0 - 0 AWAY</div>
+        <div id="controls" style="display: none;">
+            WASD: Move | SPACEBAR: Kick Ball
         </div>
     </div>
-    
-    <!-- ===== TITLE SCREEN ===== -->
-    <div id="titleScreen" class="screen">
-        <div id="redStudios">Red Studios</div>
-        <div id="proFootball">PRO FOOTBALL 26</div>
-        <button class="btn" id="playBtn">PLAY</button>
-        <div style="color: #666; margin-top: 30px; font-size: 1rem;">
-            Featuring Ronaldo's iconic 2008 performance
-        </div>
-    </div>
-    
-    <!-- ===== CUTSCENE SCREEN ===== -->
-    <div id="cutsceneScreen" class="screen">
-        <div style="font-size: 2.5rem; color: #ffff00; margin-bottom: 20px; text-align: center;">
-            MANCHESTER UNITED vs ARSENAL - 2008
-        </div>
-        <div id="cutsceneCanvas">
-            <!-- Ronaldo -->
-            <div id="ronaldoPlayer" style="position: absolute; left: 50px; top: 150px; font-size: 4rem; color: white;">👤</div>
-            <!-- Defenders -->
-            <div class="defender" style="position: absolute; left: 200px; top: 100px; font-size: 3rem; color: #ff0000;">👤</div>
-            <div class="defender" style="position: absolute; left: 300px; top: 200px; font-size: 3rem; color: #ff0000;">👤</div>
-            <div class="defender" style="position: absolute; left: 250px; top: 300px; font-size: 3rem; color: #ff0000;">👤</div>
-            <!-- Ball -->
-            <div id="ball" style="position: absolute; left: 100px; top: 180px; font-size: 2rem;">⚽</div>
-            <!-- Goal -->
-            <div style="position: absolute; right: 50px; top: 100px; width: 40px; height: 200px; border: 3px solid #00ff00; border-radius: 5px;"></div>
-            <!-- Goal Text -->
-            <div id="goalText" class="goal-text">
-                CRISTIANO RONALDO!!!<br>GOALLLLLLLLLLL!<br>
-                <span style="font-size: 1.5rem;">WHAT AN AMAZING GOAL!</span>
-            </div>
-        </div>
-        <div style="color: #aaa; margin: 20px; text-align: center; max-width: 600px;">
-            Ronaldo dribbles past 3 Arsenal defenders and scores a spectacular goal!
-        </div>
-        <button class="btn" id="nextBtn">START CAREER</button>
-    </div>
-    
-    <!-- ===== PLAYER EDITOR SCREEN ===== -->
-    <div id="editorScreen" class="screen">
-        <div class="editor-title">CREATE YOUR PLAYER</div>
-        
-        <!-- Player Display -->
-        <div class="player-display-container">
-            <div class="player-display" id="playerDisplay">👤</div>
-        </div>
-        
-        <!-- Editor Tabs -->
-        <div class="editor-tabs">
-            <button class="tab-btn active" onclick="showTab('appearance')">👤 APPEARANCE</button>
-            <button class="tab-btn" onclick="showTab('accessories')">🎽 ACCESSORIES</button>
-            <button class="tab-btn" onclick="showTab('celebrations')">🎉 CELEBRATIONS</button>
-            <button class="tab-btn" onclick="showTab('attributes')">📊 ATTRIBUTES</button>
-            <button class="tab-btn" onclick="showTab('kit')">👕 KIT</button>
-        </div>
-        
-        <!-- APPEARANCE TAB -->
-        <div id="appearance" class="tab-content active">
-            <h3>HAIR STYLES</h3>
-            <div class="option-grid">
-                <button class="option-btn" onclick="changeHair('short_black')">
-                    <div class="option-icon">💇</div>
-                    Short Black
-                </button>
-                <button class="option-btn" onclick="changeHair('long_brown')">
-                    <div class="option-icon">👱</div>
-                    Long Brown
-                </button>
-                <button class="option-btn" onclick="changeHair('curly_blonde')">
-                    <div class="option-icon">👨‍🦱</div>
-                    Curly Blonde
-                </button>
-                <button class="option-btn" onclick="changeHair('afro')">
-                    <div class="option-icon">👨‍🦲</div>
-                    Afro
-                </button>
-                <button class="option-btn" onclick="changeHair('dreads')">
-                    <div class="option-icon">🧑‍🦱</div>
-                    Dreadlocks
-                </button>
-                <button class="option-btn" onclick="changeHair('mohawk')">
-                    <div class="option-icon">💈</div>
-                    Mohawk
-                </button>
-                <button class="option-btn" onclick="changeHair('bald')">
-                    <div class="option-icon">👨‍🦲</div>
-                    Bald
-                </button>
-                <button class="option-btn" onclick="changeHair('braids')">
-                    <div class="option-icon">🧑‍🦱</div>
-                    Braids
-                </button>
-            </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"></script>
+
+    <script>
+        // Game state
+        const gameState = {
+            scene: 'title', // 'title' or 'game'
+            keys: {},
+            ballVelocity: { x: 0, y: 0, z: 0 },
+            score: {
+                home: 0,
+                away: 0
+            }
+        };
+
+        // Three.js setup
+        let scene, camera, renderer;
+        let player, ball, pitch, playButton;
+        let goal1, goal2; // Goals at each end
+        const canvas = document.getElementById('renderCanvas');
+
+        function initThreeJS() {
+            // Scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x000000);
+
+            // Camera
+            camera = new THREE.PerspectiveCamera(
+                75,
+                window.innerWidth / window.innerHeight,
+                0.1,
+                1000
+            );
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ 
+                canvas: canvas,
+                antialias: true 
+            });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        }
+
+        function createTitleScene() {
+            // Lighting for title scene
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+
+            const pointLight = new THREE.PointLight(0x0f0, 1, 100);
+            pointLight.position.set(0, 5, 5);
+            scene.add(pointLight);
+
+            // Create 3D PLAY button
+            const buttonGeometry = new THREE.BoxGeometry(3, 1, 0.5);
+            const buttonMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0x00ff00,
+                emissive: 0x00ff00,
+                emissiveIntensity: 0.3
+            });
+            playButton = new THREE.Mesh(buttonGeometry, buttonMaterial);
+            playButton.position.set(0, 0, 0);
+            playButton.castShadow = true;
+            playButton.visible = false;
+            scene.add(playButton);
+
+            // Add text to button using canvas texture
+            const buttonCanvas = document.createElement('canvas');
+            buttonCanvas.width = 512;
+            buttonCanvas.height = 128;
+            const ctx = buttonCanvas.getContext('2d');
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, 512, 128);
+            ctx.fillStyle = '#0f0';
+            ctx.font = 'bold 80px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('PLAY', 256, 64);
+
+            const buttonTexture = new THREE.CanvasTexture(buttonCanvas);
+            const textMaterial = new THREE.MeshBasicMaterial({ 
+                map: buttonTexture,
+                transparent: true
+            });
+            const textPlane = new THREE.Mesh(
+                new THREE.PlaneGeometry(3, 0.75),
+                textMaterial
+            );
+            textPlane.position.z = 0.26;
+            playButton.add(textPlane);
+
+            camera.position.set(0, 0, 8);
+            camera.lookAt(0, 0, 0);
+        }
+
+        function createGoal(zPosition) {
+            // Goal structure: 2 posts + 1 crossbar
+            const goalGroup = new THREE.Group();
+            const postMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0xffffff,
+                metalness: 0.3,
+                roughness: 0.7
+            });
+
+            // Left post
+            const leftPost = new THREE.Mesh(
+                new THREE.BoxGeometry(0.2, 2.5, 0.2),
+                postMaterial
+            );
+            leftPost.position.set(-3.5, 1.25, zPosition);
+            leftPost.castShadow = true;
+            goalGroup.add(leftPost);
+
+            // Right post
+            const rightPost = new THREE.Mesh(
+                new THREE.BoxGeometry(0.2, 2.5, 0.2),
+                postMaterial
+            );
+            rightPost.position.set(3.5, 1.25, zPosition);
+            rightPost.castShadow = true;
+            goalGroup.add(rightPost);
+
+            // Crossbar
+            const crossbar = new THREE.Mesh(
+                new THREE.BoxGeometry(7.2, 0.2, 0.2),
+                postMaterial
+            );
+            crossbar.position.set(0, 2.5, zPosition);
+            crossbar.castShadow = true;
+            goalGroup.add(crossbar);
+
+            // Add a net effect (optional back plane)
+            const netMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0xcccccc,
+                transparent: true,
+                opacity: 0.3,
+                side: THREE.DoubleSide
+            });
+            const net = new THREE.Mesh(
+                new THREE.PlaneGeometry(7, 2.5),
+                netMaterial
+            );
+            net.position.set(0, 1.25, zPosition - 0.1);
+            goalGroup.add(net);
+
+            return goalGroup;
+        }
+
+        function createGameScene() {
+            // Clear title scene
+            if (playButton) {
+                scene.remove(playButton);
+                playButton = null;
+            }
+            scene.clear();
+
+            // Reset score
+            gameState.score.home = 0;
+            gameState.score.away = 0;
+            updateScoreDisplay();
+
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(10, 20, 10);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.mapSize.width = 2048;
+            directionalLight.shadow.mapSize.height = 2048;
+            scene.add(directionalLight);
+
+            // Football pitch
+            const pitchGeometry = new THREE.BoxGeometry(20, 0.2, 30);
+            const pitchMaterial = new THREE.MeshStandardMaterial({ color: 0x00aa00 });
+            pitch = new THREE.Mesh(pitchGeometry, pitchMaterial);
+            pitch.receiveShadow = true;
+            pitch.position.y = -0.1;
+            scene.add(pitch);
+
+            // Pitch lines
+            const lineMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
             
-            <h3>FACIAL FEATURES</h3>
-            <div class="option-grid">
-                <button class="option-btn" onclick="changeFace('beard')">
-                    <div class="option-icon">🧔</div>
-                    Beard
-                </button>
-                <button class="option-btn" onclick="changeFace('mustache')">
-                    <div class="option-icon">👨</div>
-                    Mustache
-                </button>
-                <button class="option-btn" onclick="changeFace('goatee')">
-                    <div class="option-icon">🧔‍♂️</div>
-                    Goatee
-                </button>
-                <button class="option-btn" onclick="changeFace('clean')">
-                    <div class="option-icon">👦</div>
-                    Clean Shave
-                </button>
-            </div>
+            // Center line
+            const centerLine = new THREE.Mesh(
+                new THREE.BoxGeometry(20, 0.21, 0.2),
+                lineMaterial
+            );
+            centerLine.position.y = 0.01;
+            scene.add(centerLine);
+
+            // Goal lines
+            const goalLine1 = new THREE.Mesh(
+                new THREE.BoxGeometry(20, 0.21, 0.2),
+                lineMaterial
+            );
+            goalLine1.position.set(0, 0.01, -14.9);
+            scene.add(goalLine1);
+
+            const goalLine2 = new THREE.Mesh(
+                new THREE.BoxGeometry(20, 0.21, 0.2),
+                lineMaterial
+            );
+            goalLine2.position.set(0, 0.01, 14.9);
+            scene.add(goalLine2);
+
+            // Create goals at each end
+            goal1 = createGoal(-15); // Away goal (negative Z)
+            scene.add(goal1);
+
+            goal2 = createGoal(15); // Home goal (positive Z)
+            scene.add(goal2);
+
+            // Red cube player
+            const playerGeometry = new THREE.BoxGeometry(1, 1, 1);
+            const playerMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000 });
+            player = new THREE.Mesh(playerGeometry, playerMaterial);
+            player.position.set(0, 0.5, 10);
+            player.castShadow = true;
+            scene.add(player);
+
+            // White sphere ball
+            const ballGeometry = new THREE.SphereGeometry(0.4, 32, 32);
+            const ballMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff });
+            ball = new THREE.Mesh(ballGeometry, ballMaterial);
+            ball.position.set(0, 0.4, 8);
+            ball.castShadow = true;
+            scene.add(ball);
+
+            // Camera position
+            camera.position.set(0, 15, 20);
+            camera.lookAt(0, 0, 0);
+
+            // Reset ball velocity
+            gameState.ballVelocity = { x: 0, y: 0, z: 0 };
+        }
+
+        function updateScoreDisplay() {
+            const scoreDisplay = document.getElementById('scoreDisplay');
+            scoreDisplay.textContent = `HOME ${gameState.score.home} - ${gameState.score.away} AWAY`;
+        }
+
+        function resetBallToCenter() {
+            if (!ball) return;
+
+            ball.position.set(0, 0.4, 0);
+            gameState.ballVelocity = { x: 0, y: 0, z: 0 };
+
+            // Visual effect - flash the ball
+            const originalColor = ball.material.color.clone();
+            ball.material.color.setHex(0x00ff00);
+            setTimeout(() => {
+                if (ball) {
+                    ball.material.color.copy(originalColor);
+                }
+            }, 500);
+        }
+
+        function checkGoal() {
+            if (!ball) return;
+
+            const ballZ = ball.position.z;
+            const ballRadius = 0.4;
+
+            // Check if ball crossed the away goal line (negative Z)
+            if (ballZ < -15 - ballRadius) {
+                // Home team scores
+                gameState.score.home++;
+                updateScoreDisplay();
+                flashScore();
+                resetBallToCenter();
+            }
+            // Check if ball crossed the home goal line (positive Z)
+            else if (ballZ > 15 + ballRadius) {
+                // Away team scores
+                gameState.score.away++;
+                updateScoreDisplay();
+                flashScore();
+                resetBallToCenter();
+            }
+        }
+
+        function flashScore() {
+            const scoreDisplay = document.getElementById('scoreDisplay');
+            scoreDisplay.classList.add('goal-scored');
+            setTimeout(() => {
+                scoreDisplay.classList.remove('goal-scored');
+            }, 1500);
+        }
+
+        // Title screen sequence
+        function startTitleSequence() {
+            const titleText = document.getElementById('titleText');
             
-            <h3>SKIN TONE</h3>
-            <div class="color-grid">
-                <div class="color-option" style="background: #FFDAB9;" onclick="changeSkin(1)"></div>
-                <div class="color-option" style="background: #F0C8A0;" onclick="changeSkin(2)"></div>
-                <div class="color-option" style="background: #E0B080;" onclick="changeSkin(3)"></div>
-                <div class="color-option" style="background: #D09860;" onclick="changeSkin(4)"></div>
-                <div class="color-option" style="background: #C08040;" onclick="changeSkin(5)"></div>
-                <div class="color-option" style="background: #B06820;" onclick="changeSkin(6)"></div>
-            </div>
-        </div>
-        
-        <!-- ACCESSORIES TAB -->
-        <div id="accessories" class="tab-content">
-            <h3>HEAD ACCESSORIES</h3>
-            <div class="option-grid">
-                <button class="option-btn" onclick="toggleAccessory('headband')">
-                    <div class="option-icon">🎀</div>
-                    Headband
-                </button>
-                <button class="option-btn" onclick="toggleAccessory('bandana')">
-                    <div class="option-icon">🧕</div>
-                    Bandana
-                </button>
-                <button class="option-btn" onclick="toggleAccessory('cap')">
-                    <div class="option-icon">🧢</div>
-                    Cap
-                </button>
-                <button class="option-btn" onclick="toggleAccessory('sunglasses')">
-                    <div class="option-icon">🕶️</div>
-                    Sunglasses
-                </button>
-                <button class="option-btn" onclick="toggleAccessory('goggles')">
-                    <div class="option-icon">🥽</div>
-                    Goggles
-                </button>
-            </div>
-            
-            <h3>ARM ACCESSORIES</h3>
-            <div class="option-grid">
-                <button class="option-btn" onclick="toggleAccessory('gloves')">
-                    <div class="option-icon">🧤</div>
-                    Gloves
-                </button>
-                <button class="option-btn" onclick="toggleAccessory('wristband')">
-                    <div class="option-icon">💪</div>
-                    Wristband
-                </button>
-                <button class="option-btn" onclick="toggleAccessory('armband')">
-                    <div class="option-icon">💪</div>
-                    Captain Armband
-                </button>
-                <button class="option-btn" onclick="toggleAccessory('elbowpad')">
-                    <div class="option-icon">🦾</div>
-                    Elbow Pad
-                </button>
-            </div>
-            
-            <h3>BODY ACCESSORIES</h3>
-            <div class="option-grid">
-                <button class="option-btn" onclick="toggleAccessory('necklace')">
-                   
+            // Show RED STUDIOS with fade animation
+            titleText.textContent = 'RED STUDIOS';
+            titleText.classList.add('fade-animation');
+
+            // After 3 seconds, show PRO FOOTBALL 26
+            setTimeout(() => {
+                titleText.classList.remove('fade-animation');
+                titleText.textContent = 'PRO FOOTBALL 26';
+                titleText.style.opacity = '1';
+
+                // Show PLAY button after title appears
+                setTimeout(() => {
+                    if (playButton) {
+                        playButton.visible = true;
+                        // Animate button appearing
+                        playButton.position.y = -3;
+                        new TWEEN.Tween(playButton.position)
+                            .to({ y: -1 }, 1000)
+                            .easing(TWEEN.Easing.Elastic.Out)
+                            .start();
+                    }
+                }, 500);
+            }, 3000);
+        }
+
+        // Handle play button interaction
+        let isHoveringButton = false;
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+
+        function onMouseMove(event) {
+            if (gameState.scene !== 'title' || !playButton || !playButton.visible) return;
+
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObject(playButton, true);
+
+            if (intersects.length > 0) {
+                if (!isHoveringButton) {
+                    isHoveringButton = true;
+                    document.body.style.cursor = 'pointer';
+                    new TWEEN.Tween(playButton.position)
+                        .to({ y: playButton.position.y + 0.3 }, 200)
+                        .easing(TWEEN.Easing.Quadratic.Out)
+                        .start();
+                    new TWEEN.Tween(playButton.scale)
+                        .to({ x: 1.1, y: 1.1, z: 1.1 }, 200)
+                        .easing(TWEEN.Easing.Quadratic.Out)
+                        .start();
+                }
+            } else {
+                if (isHoveringButton) {
+                    isHoveringButton = false;
+                    document.body.style.cursor = 'default';
+                    new TWEEN.Tween(playButton.position)
+                        .to({ y: playButton.position.y - 0.3 }, 200)
+                        .easing(TWEEN.Easing.Quadratic.Out)
+                        .start();
+                    new TWEEN.Tween(playButton.scale)
+                        .to({ x: 1, y: 1, z: 1 }, 200)
+                        .easing(TWEEN.Easing.Quadratic.Out)
+                        .start();
+                }
+            }
+        }
+
+        function onMouseClick(event) {
+            if (gameState.scene !== 'title' || !playButton || !playButton.visible) return;
+
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObject(playButton, true);
+
+            if (intersects.length > 0) {
+                startGame();
+            }
+        }
+
+        function startGame() {
+            gameState.scene = 'game';
+            document.getElementById('titleScreen').style.display = 'none';
+            document.getElementById('controls').style.display = 'block';
+            document.getElementById('scoreDisplay').style.display = 'block';
+            createGameScene();
+        }
+
+        // Keyboard controls
+        function onKeyDown(event) {
+            gameState.keys[event.key.toLowerCase()] = true;
+
+            if (event.key === ' ' && gameState.scene === 'game') {
+                event.preventDefault();
+                kickBall();
+            }
+        }
+
+        function onKeyUp(event) {
+            gameState.keys[event.key.toLowerCase()] = false;
+        }
+
+        function kickBall() {
+            if (!ball || !player) return;
+
+            const dx = ball.position.x - player.position.x;
+            const dz = ball.position.z - player.position.z;
+            const distance = Math.sqrt(dx * dx + dz * dz);
+
+            // Only kick if ball is close enough
+            if (distance < 2) {
+                const direction = new THREE.Vector3(dx, 0, dz).normalize();
+                gameState.ballVelocity.x = direction.x * 0.3;
+                gameState.ballVelocity.y = 0.2;
+                gameState.ballVelocity.z = direction.z * 0.3;
+            }
+        }
+
+        function updatePlayer(deltaTime) {
+            if (!player) return;
+
+            const speed = 0.1;
+            let moved = false;
+
+            if (gameState.keys['w']) {
+                player.position.z -= speed;
+                moved = true;
+            }
+            if (gameState.keys['s']) {
+                player.position.z += speed;
+                moved = true;
+            }
+            if (gameState.keys['a']) {
+                player.position.x -= speed;
+                moved = true;
+            }
+            if (gameState.keys['d']) {
+                player.position.x += speed;
+                moved = true;
+            }
+
+            // Keep player on pitch
+            player.position.x = Math.max(-9, Math.min(9, player.position.x));
+            player.position.z = Math.max(-14, Math.min(14, player.position.z));
+
+            // Subtle rotation when moving
+            if (moved) {
+                player.rotation.y += 0.05;
+            }
+        }
+
+        function updateBall(deltaTime) {
+            if (!ball) return;
+
+            // Apply velocity
+            ball.position.x += gameState.ballVelocity.x;
+            ball.position.y += gameState.ballVelocity.y;
+            ball.position.z += gameState.ballVelocity.z;
+
+            // Gravity
+            gameState.ballVelocity.y -= 0.01;
+
+            // Bounce on ground
+            if (ball.position.y <= 0.4) {
+                ball.position.y = 0.4;
+                gameState.ballVelocity.y *= -0.6;
+                gameState.ballVelocity.x *= 0.95;
+                gameState.ballVelocity.z *= 0.95;
+
+                // Stop if velocity is very low
+                if (Math.abs(gameState.ballVelocity.y) < 0.02) {
+                    game
